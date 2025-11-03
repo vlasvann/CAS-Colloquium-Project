@@ -23,7 +23,8 @@ jobs:
           qt6-base-dev \
           qmake6 \
           wget \
-          file
+          file \
+          imagemagick  # ← ДОБАВИТЬ ImageMagick для создания иконок
           
     - name: Build application
       run: |
@@ -38,7 +39,7 @@ jobs:
         chmod +x linuxdeploy-x86_64.AppImage
         
         mkdir -p assets
-        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
+        convert -size 256x256 xc:#2E86AB assets/icon.png
         
         cat > ComputerAlgebraSystem.desktop << EOF
         [Desktop Entry]
@@ -53,7 +54,7 @@ jobs:
         ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop -i assets/icon.png --output appimage
         
         mv ComputerAlgebraSystem-x86_64.AppImage ComputerAlgebraSystem-Linux.AppImage
-        
+
         cat > Launch-For-All-Ubuntu.sh << 'EOF'
         #!/bin/bash
         if ./ComputerAlgebraSystem-Linux.AppImage --appimage-help >/dev/null 2>&1; then
