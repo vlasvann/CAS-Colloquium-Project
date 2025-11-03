@@ -1,138 +1,44 @@
-name: Build for All Linux
+name: Build Qt App (Static Linux)
 
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    
+    runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Install Qt and dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          libgl1-mesa-dev \
-          qt6-base-dev \
-          qmake6 \
-          wget \
-          file \
-          imagemagick
-          
-    - name: Build application
-      run: |
-        mkdir -p build
-        cd build
-        qmake6 ../ComputerAlgebraSystem.pro
-        make -j4
-        
-    - name: Create STATIC BINARY (работает везде)
-      run: |
-        mkdir -p build-static
-        cd build-static
-        qmake6 ../ComputerAlgebraSystem.pro "CONFIG += static"
-        make -j4
-        
-        echo "=== Checking dependencies ==="
-        ldd ../build/ComputerAlgebraSystem
-        echo "--- Static version ---"
-        ldd ComputerAlgebraSystem || echo "Static binary - no dependencies!"
-        
-    - name: Create Universal Linux Package
-      run: |
-        mkdir -p ComputerAlgebraSystem-Linux
-        
-        cp build-static/ComputerAlgebraSystem ComputerAlgebraSystem-Linux/
-        
-        cat > ComputerAlgebraSystem-Linux/run.sh << 'EOF'
-        #!/bin/bash
-        cd "$(dirname "$0")"
-        
-        ARCH=$(uname -m)
-        if [ "$ARCH" != "x86_64" ]; then
-            echo "Error: This package is for x86_64 systems only"
-            echo "Your architecture: $ARCH"
-            exit 1
-        fi
-        
-        GLIBC_VERSION=$(ldd --version | head -1 | grep -o '[0-9.]*' | head -1)
-        echo "GLIBC version: $GLIBC_VERSION"
-        
-        ./ComputerAlgebraSystem "$@"
-        EOF
-        chmod +x ComputerAlgebraSystem-Linux/run.sh
-        
-        cat > ComputerAlgebraSystem-Linux/LAUNCH << 'EOF'
-        #!/bin/bash
-        cd "$(dirname "$0")"
-        ./run.sh
-        EOF
-        chmod +x ComputerAlgebraSystem-Linux/LAUNCH
-        
-        cat > ComputerAlgebraSystem-Linux/ComputerAlgebraSystem.desktop << EOF
-        [Desktop Entry]
-        Version=1.0
-        Type=Application
-        Name=Computer Algebra System
-        Comment=Computer Algebra System
-        Exec=$PWD/ComputerAlgebraSystem-Linux/LAUNCH
-        Icon=
-        Categories=Education;
-        Terminal=true
-        EOF
-        
-        tar -czf ComputerAlgebraSystem-Universal-Linux.tar.gz ComputerAlgebraSystem-Linux/
-        
-        cat > check-system.sh << 'EOF'
-        #!/bin/bash
-        echo "=== System Compatibility Check ==="
-        echo "Architecture: $(uname -m)"
-        echo "GLIBC: $(ldd --version | head -1)"
-        echo "Kernel: $(uname -r)"
-        echo "Distribution: $(lsb_release -d 2>/dev/null || cat /etc/*release 2>/dev/null | head -1)"
-        echo "=== If you see GLIBC and x86_64 - package should work! ==="
-        EOF
-        chmod +x check-system.sh
-        
-    - name: Create AppImage for convenience
-      run: |
-        wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-        chmod +x linuxdeploy-x86_64.AppImage
-        
-        mkdir -p assets
-        convert -size 256x256 xc:#2E86AB assets/icon.png
-        
-        cat > ComputerAlgebraSystem.desktop << 'EOF'
-        [Desktop Entry]
-        Name=Computer Algebra System
-        Exec=ComputerAlgebraSystem
-        Icon=icon
-        Type=Application
-        Categories=Education;Science;
-        EOF
-        
-        ./linuxdeploy-x86_64.AppImage \
-          --appdir AppDir \
-          -e build/ComputerAlgebraSystem \
-          -i assets/icon.png \
-          -d ComputerAlgebraSystem.desktop \
-          --output appimage
-        
-        mv ComputerAlgebraSystem-x86_64.AppImage ComputerAlgebraSystem-Linux.AppImage
-        
-    - name: Upload Universal Packages
-      uses: actions/upload-artifact@v4
-      with:
-        name: ComputerAlgebraSystem-All-Linux
-        path: |
-          ComputerAlgebraSystem-Universal-Linux.tar.gz
-          ComputerAlgebraSystem-Linux.AppImage
-          check-system.sh
-        retention-days: 30
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.7.2' 
+          modules: 'qtbase qttools'
+          setup-python: false
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libgl1-mesa-dev
+
+      - name: Configure project
+        run: |
+          qmake CONFIG+=release CONFIG+=static
+          # или если у тебя .pro в корне:
+          # qmake ComputerAlgebraSystem.pro CONFIG+=release CONFIG+=static
+
+      - name: Build project
+        run: make -j$(nproc)
+
+      - name: Show build result
+        run: ls -lh build/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ComputerAlgebraSystem-Linux
+          path: build/ComputerAlgebraSystem
