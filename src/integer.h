@@ -34,6 +34,11 @@ public:
 
     Natural getAbsolute() const { return m_absolute; } //??
     int getSign() const { return m_sign; } //?
+
+    Integer operator+(const Integer& other) const { return ADD_ZZ_Z(other); }
+    Integer operator-(const Integer& other) const { return SUB_ZZ_Z(other); }
+    Integer operator*(const Integer& other) const { return MUL_ZZ_Z(other); }
+    Integer operator/(const Integer& other) const { return DIV_ZZ_Z(other); }
 };
 
 #endif // INTEGER_H
