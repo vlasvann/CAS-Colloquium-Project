@@ -3,6 +3,8 @@ name: Build and Test
 on:
   pull_request:
     branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
   build:
@@ -12,28 +14,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Qt
-      uses: jurplel/install-qt-action@v3
-      with:
-        version: '6.5.0'
-        cached: 'true'
-        
-    - name: Find Qt path and add to PATH
-      run: |
-        # Ищем путь к qmake
-        QT_PATH=$(find $HOME/Qt -name "qmake" -type f | head -1 | xargs dirname)
-        echo "Found qmake in: $QT_PATH"
-        echo "$QT_PATH" >> $GITHUB_PATH
-        
-    - name: Install dependencies
+    - name: Install Qt and dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libgl1-mesa-dev
+        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev
         
-    - name: Verify Qt installation
+    - name: Check Qt installation
       run: |
-        which qmake || (echo "qmake not found!" && exit 1)
-        qmake --version || (echo "qmake not working!" && exit 1)
+        which qmake-6 || exit 1
+        qmake-6 --version || exit 1
         
     - name: Create build directory
       run: mkdir build
@@ -41,7 +30,7 @@ jobs:
     - name: Configure and Build
       run: |
         cd build
-        qmake ../ComputerAlgebraSystem.pro || (echo "qmake failed!" && exit 1)
+        qmake-6 ../ComputerAlgebraSystem.pro || (echo "qmake failed!" && exit 1)
         make -j4 || (echo "make failed!" && exit 1)
         
     - name: Test Binary
@@ -50,6 +39,7 @@ jobs:
         if [ -f ComputerAlgebraSystem ]; then
           echo "✅ Linux binary built successfully"
           file ComputerAlgebraSystem
+          ls -la
         else
           echo "❌ Binary not found!"
           ls -la
