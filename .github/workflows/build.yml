@@ -21,10 +21,7 @@ jobs:
           build-essential \
           libgl1-mesa-dev \
           qt6-base-dev \
-          qmake6 \
-          wget \
-          file \
-          imagemagick
+          qmake6
           
     - name: Build application
       run: |
@@ -33,53 +30,54 @@ jobs:
         qmake6 ../ComputerAlgebraSystem.pro
         make -j4
         
-    - name: Create Universal AppImage
+    - name: Create Simple Portable Package
       run: |
-        wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-        chmod +x linuxdeploy-x86_64.AppImage
+        mkdir -p ComputerAlgebraSystem
+
+        cp build/ComputerAlgebraSystem ComputerAlgebraSystem/
         
-        mkdir -p assets
-        convert -size 256x256 xc:#2E86AB assets/icon.png
-        
-        cat > ComputerAlgebraSystem.desktop << EOF
-        [Desktop Entry]
-        Name=ComputerAlgebraSystem
-        Exec=ComputerAlgebraSystem
-        Icon=icon
-        Type=Application
-        Categories=Education;Science;
-        Comment=A computer algebra system for mathematical computations
-        EOF
-        
-        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop -i assets/icon.png --output appimage
-        
-        mv ComputerAlgebraSystem-x86_64.AppImage ComputerAlgebraSystem-Linux.AppImage
-        
-        cat > ComputerAlgebraSystem << 'EOF'
+        cat > ComputerAlgebraSystem/Run.sh << 'EOF'
         #!/bin/bash
-        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        cd "$(dirname "$0")"
+        ./ComputerAlgebraSystem
+        EOF
+        chmod +x ComputerAlgebraSystem/Run.sh
         
-        if [ -f "$SCRIPT_DIR/ComputerAlgebraSystem-Linux.AppImage" ]; then
-            if "$SCRIPT_DIR/ComputerAlgebraSystem-Linux.AppImage" --appimage-help >/dev/null 2>&1; then
-                exec "$SCRIPT_DIR/ComputerAlgebraSystem-Linux.AppImage" "$@"
-            else
-                echo "Extracting AppImage for better compatibility..."
-                "$SCRIPT_DIR/ComputerAlgebraSystem-Linux.AppImage" --appimage-extract
-                exec "$SCRIPT_DIR/squashfs-root/AppRun" "$@"
-            fi
-        else
-            echo "Error: ComputerAlgebraSystem-Linux.AppImage not found!"
-            exit 1
-        fi
+        cat > ComputerAlgebraSystem/ComputerAlgebraSystem.desktop << EOF
+        [Desktop Entry]
+        Version=1.0
+        Type=Application
+        Name=Computer Algebra System
+        Comment=Computer Algebra System
+        Exec=$PWD/ComputerAlgebraSystem/Run.sh
+        Icon=
+        Categories=Education;
+        Terminal=false
+        StartupNotify=false
+        EOF
+
+        tar -czf ComputerAlgebraSystem-Linux.tar.gz ComputerAlgebraSystem/
+        
+        cat > INSTRUCTIONS.txt << 'EOF'
+        КАК ЗАПУСТИТЬ:
+        
+        1. Распакуйте архив:
+           tar -xzf ComputerAlgebraSystem-Linux.tar.gz
+           
+        2. Перейдите в папку:
+           cd ComputerAlgebraSystem
+           
+        3. Запустите:
+           ./Run.sh
+           
+        ИЛИ просто дважды кликните на файл Run.sh
         EOF
         
-        chmod +x ComputerAlgebraSystem
-        
-    - name: Upload AppImage
+    - name: Upload Portable Package
       uses: actions/upload-artifact@v4
       with:
-        name: ComputerAlgebraSystem-AppImage
+        name: ComputerAlgebraSystem-Portable
         path: |
-          ComputerAlgebraSystem-Linux.AppImage
-          ComputerAlgebraSystem  # ← Исполняемый файл без расширения
+          ComputerAlgebraSystem-Linux.tar.gz
+          INSTRUCTIONS.txt
         retention-days: 30
