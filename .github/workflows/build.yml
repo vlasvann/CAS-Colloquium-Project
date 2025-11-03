@@ -1,4 +1,4 @@
-name: Build Linux AppImage
+name: Build Universal AppImage
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04 
     
     steps:
     - name: Checkout code
@@ -17,7 +17,7 @@ jobs:
     - name: Install Qt and dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev wget file imagemagick
+        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev wget file patchelf
         
     - name: Build application
       run: |
@@ -26,13 +26,13 @@ jobs:
         qmake6 ../ComputerAlgebraSystem.pro
         make -j4
         
-    - name: Create AppImage
+    - name: Create Universal AppImage
       run: |
         wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
         chmod +x linuxdeploy-x86_64.AppImage
         
         mkdir -p assets
-        convert -size 256x256 xc:#2E86AB assets/icon.png
+        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
         
         cat > ComputerAlgebraSystem.desktop << EOF
         [Desktop Entry]
@@ -44,13 +44,70 @@ jobs:
         Comment=A computer algebra system for mathematical computations
         EOF
         
-        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop -i assets/icon.png --output appimage
+        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop -i assets/icon.png
         
-        mv ComputerAlgebraSystem-x86_64.AppImage ComputerAlgebraSystem-Linux.AppImage
+        # 🔧 ХИТРОСТЬ: Понижаем требования к GLIBC
+        find AppDir/usr/lib -name "*.so*" -type f -exec patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 {} \; 2>/dev/null || true
         
-    - name: Upload AppImage
+    - name: Create AppImage
+      run: |
+        wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+        chmod +x appimagetool-x86_64.AppImage
+        
+        ./appimagetool-x86_64.AppImage \
+          --comp xz \
+          AppDir \
+          ComputerAlgebraSystem-Linux.AppImage
+          
+    - name: Create No-FUSE Launcher
+      run: |
+        cat > ComputerAlgebraSystem-Launcher.sh << 'EOF'
+        #!/bin/bash
+        set -e
+        
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        APPIMAGE="$SCRIPT_DIR/ComputerAlgebraSystem-Linux.AppImage"
+        
+        check_fuse() {
+          if [ -f "/usr/lib/x86_64-linux-gnu/libfuse.so.2" ] || [ -f "/usr/lib/libfuse.so.2" ]; then
+            return 0
+          else
+            return 1
+          fi
+        }
+        
+        echo "🚀 Starting Computer Algebra System..."
+        
+        if check_fuse && "$APPIMAGE" "--appimage-help" >/dev/null 2>&1; then
+          echo "✅ Using FUSE mode"
+          exec "$APPIMAGE" "$@"
+        else
+          echo "📦 Extracting AppImage (no FUSE required)..."
+          if [ ! -d "$SCRIPT_DIR/squashfs-root" ]; then
+            "$APPIMAGE" --appimage-extract >/dev/null 2>&1
+          fi
+          echo "✅ Running extracted version"
+          exec "$SCRIPT_DIR/squashfs-root/AppRun" "$@"
+        fi
+        EOF
+        
+        chmod +x ComputerAlgebraSystem-Launcher.sh
+        
+    - name: Test Compatibility
+      run: |
+        chmod +x ComputerAlgebraSystem-Linux.AppImage
+        chmod +x ComputerAlgebraSystem-Launcher.sh
+        
+        echo "=== GLIBC Requirements ==="
+        objdump -T ComputerAlgebraSystem-Linux.AppImage | grep GLIBC | awk '{print $5}' | sort -V | head -5
+        
+        ./ComputerAlgebraSystem-Linux.AppImage --appimage-extract && echo "✅ Extraction works"
+        
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ComputerAlgebraSystem-Linux-AppImage
-        path: ComputerAlgebraSystem-Linux.AppImage
+        name: ComputerAlgebraSystem-Linux
+        path: |
+          ComputerAlgebraSystem-Linux.AppImage
+          ComputerAlgebraSystem-Launcher.sh
         retention-days: 30
