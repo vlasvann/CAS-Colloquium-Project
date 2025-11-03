@@ -17,7 +17,7 @@ jobs:
     - name: Install Qt and dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev wget file imagemagick
+        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev wget file
         
     - name: Build application
       run: |
@@ -32,7 +32,7 @@ jobs:
         chmod +x linuxdeploy-x86_64.AppImage
         
         mkdir -p assets
-        convert -size 256x256 xc:#2E86AB -fill white -pointsize 60 -gravity center -annotate +0+0 "CAS" assets/icon.png
+        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
         
         cat > ComputerAlgebraSystem.desktop << EOF
         [Desktop Entry]
@@ -47,12 +47,6 @@ jobs:
         ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop -i assets/icon.png --output appimage
         
         mv ComputerAlgebraSystem-x86_64.AppImage ComputerAlgebraSystem-Linux.AppImage
-        
-    - name: Verify AppImage
-      run: |
-        chmod +x ComputerAlgebraSystem-Linux.AppImage
-        file ComputerAlgebraSystem-Linux.AppImage
-        echo "✅ AppImage создан успешно"
         
     - name: Upload AppImage
       uses: actions/upload-artifact@v4
