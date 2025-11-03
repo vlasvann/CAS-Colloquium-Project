@@ -34,6 +34,16 @@ jobs:
         mkdir -p assets
         convert -size 256x256 xc:#2E86AB -fill white -pointsize 60 -gravity center -annotate +0+0 "CAS" assets/icon.png
         
+        cat > ComputerAlgebraSystem.desktop << EOF
+        [Desktop Entry]
+        Name=ComputerAlgebraSystem
+        Exec=ComputerAlgebraSystem
+        Icon=icon
+        Type=Application
+        Categories=Education;Science;
+        Comment=A computer algebra system for mathematical computations
+        EOF
+        
         ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop -i assets/icon.png --output appimage
         
         mv ComputerAlgebraSystem-x86_64.AppImage ComputerAlgebraSystem-Linux.AppImage
