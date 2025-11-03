@@ -31,7 +31,7 @@ jobs:
         wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
         chmod +x linuxdeploy-x86_64.AppImage
         
-        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop --no-deploy-icon --output appimage
+        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop --output appimage
         
         mv ComputerAlgebraSystem*.AppImage ComputerAlgebraSystem-Linux.AppImage
         
