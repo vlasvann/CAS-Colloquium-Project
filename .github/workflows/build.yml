@@ -1,4 +1,4 @@
-name: Build Qt App (Static Linux)
+name: Build Qt App (AppImage, Linux Universal)
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Build ComputerAlgebraSystem AppImage
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
@@ -16,29 +17,42 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.7.2' 
+          version: '6.7.2'
           modules: 'qtbase qttools'
           setup-python: false
 
-      - name: Install build dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libgl1-mesa-dev
+          sudo apt-get install -y build-essential libgl1-mesa-dev patchelf
 
-      - name: Configure project
+      - name: Build Qt project
         run: |
-          qmake CONFIG+=release CONFIG+=static
-          # или если у тебя .pro в корне:
-          # qmake ComputerAlgebraSystem.pro CONFIG+=release CONFIG+=static
+          qmake ComputerAlgebraSystem.pro CONFIG+=release
+          make -j$(nproc)
+          mkdir -p AppDir/usr/bin
+          cp build/ComputerAlgebraSystem AppDir/usr/bin/
 
-      - name: Build project
-        run: make -j$(nproc)
+      - name: Create desktop entry (no icon)
+        run: |
+          mkdir -p AppDir/usr/share/applications
+          echo "[Desktop Entry]
+          Type=Application
+          Name=Computer Algebra System
+          Exec=ComputerAlgebraSystem
+          Categories=Education;Science;Math;" > AppDir/usr/share/applications/ComputerAlgebraSystem.desktop
 
-      - name: Show build result
-        run: ls -lh build/
+      - name: Download AppImageTool
+        run: |
+          wget https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
 
-      - name: Upload build artifact
+      - name: Create AppImage
+        run: |
+          ./appimagetool-x86_64.AppImage AppDir ComputerAlgebraSystem-x86_64.AppImage
+
+      - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ComputerAlgebraSystem-Linux
-          path: build/ComputerAlgebraSystem
+          name: ComputerAlgebraSystem-AppImage
+          path: ComputerAlgebraSystem-x86_64.AppImage
