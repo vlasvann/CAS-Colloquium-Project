@@ -1,58 +1,135 @@
-name: Build Qt App (AppImage, Linux Universal)
+name: Build for All Linux
 
 on:
   push:
+    branches: [main]
   pull_request:
-  workflow_dispatch:
+    branches: [main]
 
 jobs:
   build:
-    name: Build ComputerAlgebraSystem AppImage
     runs-on: ubuntu-22.04
-
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt and dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          libgl1-mesa-dev \
+          qt6-base-dev \
+          qmake6 \
+          wget \
+          file
+          
+    - name: Build application
+      run: |
+        mkdir -p build
+        cd build
+        qmake6 ../ComputerAlgebraSystem.pro
+        make -j4
+        
+    - name: Create UNIVERSAL LINUX PACKAGE
+      run: |
+        mkdir -p ComputerAlgebraSystem
+        
+        cp build/ComputerAlgebraSystem ComputerAlgebraSystem/
+        
+        cat > ComputerAlgebraSystem/ComputerAlgebraSystem << 'EOF'
+        #!/bin/bash
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.7.2'
-          modules: 'qtbase qttools'
-          setup-python: false
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libgl1-mesa-dev patchelf
-
-      - name: Build Qt project
-        run: |
-          qmake ComputerAlgebraSystem.pro CONFIG+=release
-          make -j$(nproc)
-          mkdir -p AppDir/usr/bin
-          cp build/ComputerAlgebraSystem AppDir/usr/bin/
-
-      - name: Create desktop entry (no icon)
-        run: |
-          mkdir -p AppDir/usr/share/applications
-          echo "[Desktop Entry]
-          Type=Application
-          Name=Computer Algebra System
-          Exec=ComputerAlgebraSystem
-          Categories=Education;Science;Math;" > AppDir/usr/share/applications/ComputerAlgebraSystem.desktop
-
-      - name: Download AppImageTool
-        run: |
-          wget https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
-          chmod +x appimagetool-x86_64.AppImage
-
-      - name: Create AppImage
-        run: |
-          ./appimagetool-x86_64.AppImage AppDir ComputerAlgebraSystem-x86_64.AppImage
-
-      - name: Upload AppImage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ComputerAlgebraSystem-AppImage
-          path: ComputerAlgebraSystem-x86_64.AppImage
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        cd "$SCRIPT_DIR"
+        
+        fix_libraries() {
+            echo "Setting up library path..."
+            export LD_LIBRARY_PATH="$SCRIPT_DIR:${LD_LIBRARY_PATH}"
+        }
+        
+        fix_libraries
+        
+        exec "./ComputerAlgebraSystem.bin" "$@"
+        EOF
+        
+        mv ComputerAlgebraSystem/ComputerAlgebraSystem ComputerAlgebraSystem/ComputerAlgebraSystem.bin
+        
+        chmod +x ComputerAlgebraSystem/ComputerAlgebraSystem
+        chmod +x ComputerAlgebraSystem/ComputerAlgebraSystem.bin
+        
+        cat > ComputerAlgebraSystem/install-libs.sh << 'EOF'
+        #!/bin/bash
+        echo "Copying required libraries..."
+        
+        LIBRARIES=(
+            "/usr/lib/x86_64-linux-gnu/libQt6Core.so.6"
+            "/usr/lib/x86_64-linux-gnu/libQt6Gui.so.6" 
+            "/usr/lib/x86_64-linux-gnu/libQt6Widgets.so.6"
+        )
+        
+        for lib in "${LIBRARIES[@]}"; do
+            if [ -f "$lib" ]; then
+                cp "$lib" .
+                echo "Copied: $(basename "$lib")"
+            fi
+        done
+        
+        echo "Done! Now try: ./ComputerAlgebraSystem"
+        EOF
+        chmod +x ComputerAlgebraSystem/install-libs.sh
+        
+        cat > ComputerAlgebraSystem/README.txt << 'EOF'
+        🚀 COMPUTER ALGEBRA SYSTEM - LINUX
+        
+        === КАК ЗАПУСТИТЬ ===
+        
+        1. ПРОСТОЙ СПОСОБ (двойной клик):
+           - Дважды кликните на файл "ComputerAlgebraSystem"
+           - Выберите "Run" или "Execute"
+        
+        2. ТЕРМИНАЛ:
+           ./ComputerAlgebraSystem
+        
+        3. ЕСЛИ НЕ ЗАПУСКАЕТСЯ:
+           ./install-libs.sh
+           ./ComputerAlgebraSystem
+        
+        === СИСТЕМНЫЕ ТРЕБОВАНИЯ ===
+        - Ubuntu 22.04, 23.04, 24.04+
+        - Fedora 36+
+        - Arch Linux
+        - Linux Mint 21+
+        - Debian 11+
+        - И ЛЮБОЙ ДРУГОЙ Linux!
+        
+        EOF
+        
+        tar -czf ComputerAlgebraSystem-Linux.tar.gz ComputerAlgebraSystem/
+        
+    - name: Create SIMPLE LAUNCH SCRIPT
+      run: |
+        cat > Run-ComputerAlgebraSystem.sh << 'EOF'
+        #!/bin/bash
+        echo "🚀 Starting Computer Algebra System..."
+        echo "If this doesn't work, extract the tar.gz archive"
+        
+        if [ -f "ComputerAlgebraSystem-Linux.tar.gz" ]; then
+            tar -xzf ComputerAlgebraSystem-Linux.tar.gz
+            cd ComputerAlgebraSystem
+            ./ComputerAlgebraSystem
+        else
+            echo "Error: ComputerAlgebraSystem-Linux.tar.gz not found!"
+        fi
+        EOF
+        chmod +x Run-ComputerAlgebraSystem.sh
+        
+    - name: Upload FINAL PACKAGE
+      uses: actions/upload-artifact@v4
+      with:
+        name: ComputerAlgebraSystem-Linux
+        path: |
+          ComputerAlgebraSystem-Linux.tar.gz
+          Run-ComputerAlgebraSystem.sh
+        retention-days: 30
