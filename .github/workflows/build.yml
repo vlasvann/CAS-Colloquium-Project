@@ -1,25 +1,30 @@
-name: Build Qt Application
+name: Build Linux AppImage
 
 on:
+  pull_request:
+    branches: [ main ]
   push:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
       
     - name: Install Qt and dependencies
       run: |
-        sudo apt update
-        sudo apt install -y qt6-base-dev qmake6 build-essential wget file imagemagick
+        sudo apt-get update
+        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev wget file imagemagick
         
-    - name: Build
+    - name: Build application
       run: |
-        mkdir build && cd build
-        qmake6 .. && make -j$(nproc)
+        mkdir build
+        cd build
+        qmake6 ../ComputerAlgebraSystem.pro
+        make -j4
         
     - name: Create AppImage
       run: |
@@ -27,19 +32,31 @@ jobs:
         chmod +x linuxdeploy-x86_64.AppImage
         
         mkdir -p assets
-        convert -size 256x256 xc:#2E86AB assets/icon.png
+        convert -size 256x256 xc:#2E86AB -fill white -pointsize 60 -gravity center -annotate +0+0 "CAS" assets/icon.png
         
-        ./linuxdeploy-x86_64.AppImage \
-          --appdir AppDir \
-          -e build/ComputerAlgebraSystem \
-          -d ComputerAlgebraSystem.desktop \
-          -i assets/icon.png \
-          --output appimage
+        cat > ComputerAlgebraSystem.desktop << EOF
+        [Desktop Entry]
+        Name=ComputerAlgebraSystem
+        Exec=ComputerAlgebraSystem
+        Icon=icon
+        Type=Application
+        Categories=Education;Science;
+        Comment=A computer algebra system for mathematical computations
+        EOF
+        
+        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop -i assets/icon.png --output appimage
         
         mv ComputerAlgebraSystem-x86_64.AppImage ComputerAlgebraSystem-Linux.AppImage
+        
+    - name: Verify AppImage
+      run: |
+        chmod +x ComputerAlgebraSystem-Linux.AppImage
+        file ComputerAlgebraSystem-Linux.AppImage
+        echo "✅ AppImage создан успешно"
         
     - name: Upload AppImage
       uses: actions/upload-artifact@v4
       with:
-        name: ComputerAlgebraSystem
+        name: ComputerAlgebraSystem-Linux-AppImage
         path: ComputerAlgebraSystem-Linux.AppImage
+        retention-days: 30
