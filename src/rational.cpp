@@ -1,49 +1,187 @@
 #include "rational.h"
+#include <stdexcept>
 
-Rational::Rational() {}
+/*
+ * Developed by Smirnov Aleksandr Dmitrievich group 4382
+ * and Vyaznikov Nikita 4382
+ * Rational - реализация класса рациональных чисел
+ */
 
+/**
+ * @brief Конструктор класса Rational по умолчанию.
+ * @return Объект класса Rational
+ * 
+ * Создаёт Rational с числителем 0 и знаменателем 1
+*/
+Rational::Rational() : m_numerator(Integer("0")), m_denominator(Natural("1")) {}
+
+/**
+ * @brief Параметризированный конструктор класса Rational.
+ * @param num целый числитель в формате const Integer&
+ * @param den натуральный знаменатель в формате const Natural&
+ * @return Объект класса Rational
+ * 
+ * Создаёт Rational с заданным числителем и знаменателем
+*/
 Rational::Rational(const Integer& num, const Natural& den) : m_numerator(num), m_denominator(den) {}
 
+/**
+ * @brief Конструктор класса Rational из строки.
+ * @param number исходное число в формате const string&
+ * @return Объект класса Rational
+ * 
+ * Создаёт Rational из заданной строки. Предполагается, что формат изначально верен.
+ * Если получается так, что знаменатель получившейся дроби равен 0, то выбрасывается исключение
+*/
+Rational::Rational(const std::string& number) {
+    size_t slashPos = number.find('/');
+    if (slashPos == std::string::npos){
+        this->m_numerator = Integer(number);
+        this->m_denominator = Natural("1");
+    }
+    else{
+        this->m_numerator = Integer(number.substr(0, slashPos));
+        this->m_denominator = Natural(number.substr(slashPos + 1));
+        if (this->m_denominator.COM_NN_D(Natural("0")) == 0){
+            throw std::invalid_argument("Zero in denominator of rational number");
+        }
+    }
+}
+
+/**
+ * @brief Метод сокращения дроби
+ * @return Rational сокращённая дробь
+ * 
+ * Находит НОД числителя и знаменателя и делит их на него
+*/
 Rational Rational::RED_Q_Q() const {
-    return Rational(); // временная заглушка
+    if (this->isZero()){
+        return Rational(this->m_numerator, this->m_denominator);
+    }
+    Natural abs_num = this->m_numerator.getAbsolute();
+    Natural GCF = abs_num.GCF_NN_N(this->m_denominator);
+    Integer red_num = this->m_numerator.DIV_ZZ_Z(GCF);
+    Natural red_den = this->m_denominator.DIV_NN_N(GCF);
+    return Rational(red_num, red_den);
 }
 
+/**
+ * @brief Метод проверки сокращённого дробного на целое
+ * @return true, если можно перевести в целое, иначе - false
+ * 
+ * Сокращает дробь и проверяет равен ли знаменатель единице
+*/
 bool Rational::INT_Q_B() const {
-    return false; // временная заглушка
+    Rational red_q = this->RED_Q_Q();
+    Natural red_den = red_q.getDenominator();
+    return (red_den.COM_NN_D(Natural("1")) == 0);
 }
 
+/**
+ * @brief Метод перевода целого в рациональное
+ * @return Rational полученное рациональное число
+ * 
+ * Создаёт рациональное число с числителем из исходного целого числа,
+ * а знаменатель равен единице
+*/
+Rational Rational::TRANS_Z_Q(const Integer& num) {
+    return Rational(num, Natural("1"));
+}
+
+/**
+ * @brief Метод перевода рационального в целое
+ * @return Integer полученное целое число
+ * 
+ * Сокращает дробь, проверяет на целое с помощью INT_Q_B.
+ * Если не является целым, то выбрасывает исключение, иначе возвращает числитель
+*/
 Integer Rational::TRANS_Q_Z() const {
-    return Integer(); // временная заглушка
+    Rational red_q = this->RED_Q_Q();
+    if (red_q.INT_Q_B()){
+        return red_q.m_numerator;
+    }
+    throw std::runtime_error("Attempt to translate a rational number with a denominator not equal to one to an integer");
 }
 
-Rational Rational::TRANS_Z_Q(const Integer&) {
-    return Rational(); // временная заглушка
+/**
+* @brief Суммирует два рациональных числа
+* @param other Второе слагаемое
+* @return Rational Результат суммирования
+*
+* Вычисляет НОК знаменателей;
+* Числитель = числитель1*НОК/знаменатель1 + числитель2*НОК/знаменатель2;
+* Знаменатель = НОК;
+*/
+Rational Rational::ADD_QQ_Q(const Rational& other) const {
+    Natural newDen = this->m_denominator.LCM_NN_N(other.m_denominator);
+    Integer newNum = this->m_numerator*newDen.DIV_NN_N(this->m_denominator) + other.m_numerator*newDen.DIV_NN_N(other.m_denominator);
+    return Rational(newNum, newDen).RED_Q_Q();
 }
 
-Rational Rational::ADD_QQ_Q(const Rational&) const {
-    return Rational(); // временная заглушка
+/**
+* @brief Делает разницу двух рациональных чисел
+* @param other Вычитаемое
+* @return Rational Результат разности
+*
+* Вычисляет НОК знаменателей;
+* Числитель = числитель1*НОК/знаменатель1 - числитель2*НОК/знаменатель2;
+* Знаменатель = НОК;
+*/
+Rational Rational::SUB_QQ_Q(const Rational& other) const {
+    Natural newDen = this->m_denominator.LCM_NN_N(other.m_denominator);
+    Integer newNum = this->m_numerator*newDen.DIV_NN_N(this->m_denominator) - other.m_numerator*newDen.DIV_NN_N(other.m_denominator);
+    return Rational(newNum, newDen).RED_Q_Q();
 }
 
-Rational Rational::SUB_QQ_Q(const Rational&) const {
-    return Rational(); // временная заглушка
+/**
+* @brief Перемножает два рациональных числа
+* @param other Второй множитель
+* @return Rational Результат произведения
+*
+* Числитель = числитель1 * числитель2;
+* Знаменатель = знаменатель1 * знаменатель2;
+*/
+Rational Rational::MUL_QQ_Q(const Rational& other) const {
+    Integer newNum = this->m_numerator * other.m_numerator;
+    Natural newDen = this->m_denominator * other.m_denominator;
+    return Rational(newNum, newDen).RED_Q_Q();
 }
 
-Rational Rational::MUL_QQ_Q(const Rational&) const {
-    return Rational(); // временная заглушка
+/**
+* @brief Делит рациональное число на другое
+* @param other Делимое
+* @return Rational Результат деления
+*
+* Числитель = числитель1 * знаменатель2;
+* Знаменатель = знаменатель1 * числитель2;
+*/
+Rational Rational::DIV_QQ_Q(const Rational& other) const {
+    if(other.isZero()){ // Проверка на деление на ноль
+        throw std::runtime_error("Zero Division!!!");
+    }
+
+    int newSign = this->m_numerator.POZ_Z_D() * other.m_numerator.POZ_Z_D();
+    Integer newNum = Integer(this->m_numerator.getAbsolute() * other.m_denominator, newSign);
+    Natural newDenum = this->m_denominator * other.m_numerator.getAbsolute();
+
+    return Rational(newNum, newDenum).RED_Q_Q();
 }
 
-Rational Rational::DIV_QQ_Q(const Rational&) const {
-    return Rational(); // временная заглушка
+/**
+* @brief Перевод рационального числа в строку
+* @return string представляющая рациональное число строка
+*/
+std::string Rational::toString() const{
+    std::string res {this->m_numerator.toString()};
+    return res + "/" + this->m_denominator.toString();
 }
 
-bool Rational::isZero() const { 
-    return false; 
-}
-
-bool Rational::isInteger() const { 
-    return false; 
-}
-
-void Rational::reduceFraction() {
-    // временная заглушка
+/**
+* @brief Проверка на равенство 0
+* @return true, если 0, иначе - false 
+*
+* Проверяет равен ли числитель 0
+*/
+bool Rational::isZero() const {
+    return this->m_numerator.isZero(); 
 }
