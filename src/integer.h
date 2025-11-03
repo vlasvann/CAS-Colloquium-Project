@@ -27,7 +27,7 @@ public:
     Integer DIV_ZZ_Z(const Integer& divisor) const; // Частное от деления
     Integer MOD_ZZ_Z(const Integer& divisor) const; // Остаток от деления
 
-    std::string toString() const; //??
+    std::string toString() const { return ""; } //??
     bool isZero() const { return m_sign == 0; } //??
     bool isPositive() const { return m_sign > 0; } //?
     bool isNegative() const { return m_sign < 0; } //?

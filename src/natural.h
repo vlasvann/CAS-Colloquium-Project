@@ -30,7 +30,7 @@ public:
     Natural GCF_NN_N(const Natural& other) const; // НОД
     Natural LCM_NN_N(const Natural& other) const; // НОК
 
-    std::string toString() const;
+    std::string toString() const { return ""; }
 
     Natural operator+(const Natural& other) const { return ADD_NN_N(other); }
     Natural operator-(const Natural& other) const { return SUB_NN_N(other); }
