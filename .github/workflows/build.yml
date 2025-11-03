@@ -1,60 +1,105 @@
-name: Build Universal AppImage
+name: Build
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
-    
+    strategy:
+      matrix:
+        format: [appimage, portable, flatpak]
+    runs-on: ubuntu-22.04
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Install Qt
       run: |
         sudo apt update && sudo apt install -y \
-          build-essential \
-          libgl1-mesa-dev \
-          qt6-base-dev \
-          qmake6
-        
+          build-essential libgl1-mesa-dev \
+          qt6-base-dev qmake6 wget file
+
     - name: Build
       run: |
         mkdir build && cd build
-        qmake6 .. 
-        make -j$(nproc)
-    
-    - name: Create AppImage
+        qmake6 .. && make -j$(nproc)
+
+    - name: Create ${{ matrix.format }}
       run: |
-        wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-        chmod +x linuxdeploy*.AppImage
-        
-        mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
-        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > AppDir/usr/share/icons/hicolor/256x256/apps/icon.png
-        
-        mkdir -p AppDir/usr/share/applications
-        cat > AppDir/usr/share/applications/ComputerAlgebraSystem.desktop << 'EOF'
-        [Desktop Entry]
-        Name=Computer Algebra System
-        Exec=ComputerAlgebraSystem
-        Icon=icon
-        Type=Application
-        Categories=Education;Science;
-        Comment=Computer Algebra System
-        EOF
-        
-        mkdir -p AppDir/usr/bin
-        cp build/ComputerAlgebraSystem AppDir/usr/bin/
-        
-        wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
-        chmod +x appimagetool*.AppImage
-        
-        ./appimagetool-x86_64.AppImage \
-          --comp xz \
-          AppDir \
-          ComputerAlgebraSystem-Linux.AppImage
-        
-    - name: Upload AppImage
+        case "${{ matrix.format }}" in
+          appimage)
+            wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+            chmod +x linuxdeploy*.AppImage
+            
+            mkdir -p assets
+            convert -size 256x256 xc:#2E86AB assets/icon.png
+            
+            cat > ComputerAlgebraSystem.desktop << 'EOF'
+            [Desktop Entry]
+            Name=Computer Algebra System
+            Exec=ComputerAlgebraSystem
+            Icon=icon
+            Type=Application
+            Categories=Education;Science;
+            EOF
+            
+            ./linuxdeploy-x86_64.AppImage \
+              --appdir AppDir \
+              -e build/ComputerAlgebraSystem \
+              -i assets/icon.png \
+              -d ComputerAlgebraSystem.desktop \
+              --output appimage
+            
+            mv ComputerAlgebraSystem-x86_64.AppImage ComputerAlgebraSystem-Linux.AppImage
+            ;;
+
+          portable)
+            mkdir -p ComputerAlgebraSystem-portable
+            cp build/ComputerAlgebraSystem ComputerAlgebraSystem-portable/
+            
+            cat > ComputerAlgebraSystem-portable/launch << 'EOF'
+            #!/bin/bash
+            ./ComputerAlgebraSystem
+            EOF
+            chmod +x ComputerAlgebraSystem-portable/launch
+            
+            tar -czf ComputerAlgebraSystem-Portable.tar.gz ComputerAlgebraSystem-portable/
+            ;;
+
+          flatpak)
+            sudo apt install -y flatpak flatpak-builder
+            flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+            
+            cat > com.yourcompany.ComputerAlgebraSystem.yaml << 'EOF'
+            app-id: com.yourcompany.ComputerAlgebraSystem
+            runtime: org.kde.Platform
+            runtime-version: '6.5'
+            sdk: org.kde.Sdk
+            command: ComputerAlgebraSystem
+            
+            modules:
+              - name: ComputerAlgebraSystem
+                buildsystem: simple
+                build-commands:
+                  - install -Dm755 ComputerAlgebraSystem /app/bin/ComputerAlgebraSystem
+                sources:
+                  - type: dir
+                    path: .
+            EOF
+            
+            flatpak-builder --user --install build-dir com.yourcompany.ComputerAlgebraSystem.yaml
+            flatpak build-bundle ~/.local/share/flatpak/repo ComputerAlgebraSystem.flatpak com.yourcompany.ComputerAlgebraSystem
+            ;;
+        esac
+
+    - name: Upload ${{ matrix.format }}
       uses: actions/upload-artifact@v4
       with:
-        name: ComputerAlgebraSystem
-        path: ComputerAlgebraSystem-Linux.AppImage
+        name: ComputerAlgebraSystem-${{ matrix.format }}
+        path: |
+          ComputerAlgebraSystem-Linux.AppImage
+          ComputerAlgebraSystem-Portable.tar.gz
+          ComputerAlgebraSystem.flatpak
