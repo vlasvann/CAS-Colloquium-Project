@@ -21,8 +21,8 @@ jobs:
         
     - name: Check Qt installation
       run: |
-        which qmake-6 || exit 1
-        qmake-6 --version || exit 1
+        which qmake6 || (echo "qmake6 not found!" && exit 1)
+        qmake6 --version || (echo "qmake6 not working!" && exit 1)
         
     - name: Create build directory
       run: mkdir build
@@ -30,7 +30,7 @@ jobs:
     - name: Configure and Build
       run: |
         cd build
-        qmake-6 ../ComputerAlgebraSystem.pro || (echo "qmake failed!" && exit 1)
+        qmake6 ../ComputerAlgebraSystem.pro || (echo "qmake failed!" && exit 1)
         make -j4 || (echo "make failed!" && exit 1)
         
     - name: Test Binary
