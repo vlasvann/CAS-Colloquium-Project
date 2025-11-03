@@ -34,7 +34,7 @@ jobs:
         mkdir -p assets
         echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
         
-        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem --output appimage
+        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop -i assets/icon.png --output appimage
         
         mv ComputerAlgebraSystem*.AppImage ComputerAlgebraSystem-Linux.AppImage
         
@@ -42,7 +42,7 @@ jobs:
       run: |
         chmod +x ComputerAlgebraSystem-Linux.AppImage
         file ComputerAlgebraSystem-Linux.AppImage
-        ./ComputerAlgebraSystem-Linux.AppImage --appimage-help || echo "✅ AppImage created successfully"
+        echo "✅ AppImage created successfully"
         
     - name: Upload AppImage
       uses: actions/upload-artifact@v4
