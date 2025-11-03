@@ -24,7 +24,7 @@ jobs:
           qmake6 \
           wget \
           file \
-          imagemagick  # ← ДОБАВИТЬ ImageMagick для создания иконок
+          imagemagick
           
     - name: Build application
       run: |
@@ -54,18 +54,26 @@ jobs:
         ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop -i assets/icon.png --output appimage
         
         mv ComputerAlgebraSystem-x86_64.AppImage ComputerAlgebraSystem-Linux.AppImage
-
-        cat > Launch-For-All-Ubuntu.sh << 'EOF'
+        
+        cat > ComputerAlgebraSystem << 'EOF'
         #!/bin/bash
-        if ./ComputerAlgebraSystem-Linux.AppImage --appimage-help >/dev/null 2>&1; then
-            ./ComputerAlgebraSystem-Linux.AppImage "$@"
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        
+        if [ -f "$SCRIPT_DIR/ComputerAlgebraSystem-Linux.AppImage" ]; then
+            if "$SCRIPT_DIR/ComputerAlgebraSystem-Linux.AppImage" --appimage-help >/dev/null 2>&1; then
+                exec "$SCRIPT_DIR/ComputerAlgebraSystem-Linux.AppImage" "$@"
+            else
+                echo "Extracting AppImage for better compatibility..."
+                "$SCRIPT_DIR/ComputerAlgebraSystem-Linux.AppImage" --appimage-extract
+                exec "$SCRIPT_DIR/squashfs-root/AppRun" "$@"
+            fi
         else
-            echo "Extracting AppImage for Ubuntu 24.04 compatibility..."
-            ./ComputerAlgebraSystem-Linux.AppImage --appimage-extract
-            ./squashfs-root/AppRun "$@"
+            echo "Error: ComputerAlgebraSystem-Linux.AppImage not found!"
+            exit 1
         fi
         EOF
-        chmod +x Launch-For-All-Ubuntu.sh
+        
+        chmod +x ComputerAlgebraSystem
         
     - name: Upload AppImage
       uses: actions/upload-artifact@v4
@@ -73,5 +81,5 @@ jobs:
         name: ComputerAlgebraSystem-AppImage
         path: |
           ComputerAlgebraSystem-Linux.AppImage
-          Launch-For-All-Ubuntu.sh
+          ComputerAlgebraSystem  # ← Исполняемый файл без расширения
         retention-days: 30
