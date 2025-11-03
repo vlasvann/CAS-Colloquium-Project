@@ -1,9 +1,7 @@
-name: Build for All Linux
+name: Build Qt Application
 
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
 
 jobs:
@@ -11,125 +9,26 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
       
-    - name: Install Qt and dependencies
+    - name: Install Qt
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          libgl1-mesa-dev \
-          qt6-base-dev \
-          qmake6 \
-          wget \
-          file
-          
-    - name: Build application
+        sudo apt update
+        sudo apt install -y qt6-base-dev qmake6 build-essential
+        
+    - name: Build
       run: |
-        mkdir -p build
-        cd build
-        qmake6 ../ComputerAlgebraSystem.pro
-        make -j4
+        mkdir build && cd build
+        qmake6 .. && make -j$(nproc)
         
-    - name: Create UNIVERSAL LINUX PACKAGE
+    - name: Create AppImage
       run: |
-        mkdir -p ComputerAlgebraSystem
+        wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        chmod +x linuxdeploy-x86_64.AppImage
+        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem --output appimage
         
-        cp build/ComputerAlgebraSystem ComputerAlgebraSystem/
-        
-        cat > ComputerAlgebraSystem/ComputerAlgebraSystem << 'EOF'
-        #!/bin/bash
-
-        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-        cd "$SCRIPT_DIR"
-        
-        fix_libraries() {
-            echo "Setting up library path..."
-            export LD_LIBRARY_PATH="$SCRIPT_DIR:${LD_LIBRARY_PATH}"
-        }
-        
-        fix_libraries
-        
-        exec "./ComputerAlgebraSystem.bin" "$@"
-        EOF
-        
-        mv ComputerAlgebraSystem/ComputerAlgebraSystem ComputerAlgebraSystem/ComputerAlgebraSystem.bin
-        
-        chmod +x ComputerAlgebraSystem/ComputerAlgebraSystem
-        chmod +x ComputerAlgebraSystem/ComputerAlgebraSystem.bin
-        
-        cat > ComputerAlgebraSystem/install-libs.sh << 'EOF'
-        #!/bin/bash
-        echo "Copying required libraries..."
-        
-        LIBRARIES=(
-            "/usr/lib/x86_64-linux-gnu/libQt6Core.so.6"
-            "/usr/lib/x86_64-linux-gnu/libQt6Gui.so.6" 
-            "/usr/lib/x86_64-linux-gnu/libQt6Widgets.so.6"
-        )
-        
-        for lib in "${LIBRARIES[@]}"; do
-            if [ -f "$lib" ]; then
-                cp "$lib" .
-                echo "Copied: $(basename "$lib")"
-            fi
-        done
-        
-        echo "Done! Now try: ./ComputerAlgebraSystem"
-        EOF
-        chmod +x ComputerAlgebraSystem/install-libs.sh
-        
-        cat > ComputerAlgebraSystem/README.txt << 'EOF'
-        🚀 COMPUTER ALGEBRA SYSTEM - LINUX
-        
-        === КАК ЗАПУСТИТЬ ===
-        
-        1. ПРОСТОЙ СПОСОБ (двойной клик):
-           - Дважды кликните на файл "ComputerAlgebraSystem"
-           - Выберите "Run" или "Execute"
-        
-        2. ТЕРМИНАЛ:
-           ./ComputerAlgebraSystem
-        
-        3. ЕСЛИ НЕ ЗАПУСКАЕТСЯ:
-           ./install-libs.sh
-           ./ComputerAlgebraSystem
-        
-        === СИСТЕМНЫЕ ТРЕБОВАНИЯ ===
-        - Ubuntu 22.04, 23.04, 24.04+
-        - Fedora 36+
-        - Arch Linux
-        - Linux Mint 21+
-        - Debian 11+
-        - И ЛЮБОЙ ДРУГОЙ Linux!
-        
-        EOF
-        
-        tar -czf ComputerAlgebraSystem-Linux.tar.gz ComputerAlgebraSystem/
-        
-    - name: Create SIMPLE LAUNCH SCRIPT
-      run: |
-        cat > Run-ComputerAlgebraSystem.sh << 'EOF'
-        #!/bin/bash
-        echo "🚀 Starting Computer Algebra System..."
-        echo "If this doesn't work, extract the tar.gz archive"
-        
-        if [ -f "ComputerAlgebraSystem-Linux.tar.gz" ]; then
-            tar -xzf ComputerAlgebraSystem-Linux.tar.gz
-            cd ComputerAlgebraSystem
-            ./ComputerAlgebraSystem
-        else
-            echo "Error: ComputerAlgebraSystem-Linux.tar.gz not found!"
-        fi
-        EOF
-        chmod +x Run-ComputerAlgebraSystem.sh
-        
-    - name: Upload FINAL PACKAGE
+    - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: ComputerAlgebraSystem-Linux
-        path: |
-          ComputerAlgebraSystem-Linux.tar.gz
-          Run-ComputerAlgebraSystem.sh
-        retention-days: 30
+        name: ComputerAlgebraSystem
+        path: ComputerAlgebraSystem-x86_64.AppImage
