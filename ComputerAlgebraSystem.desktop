@@ -1,6 +1,7 @@
 [Desktop Entry]
 Name=Computer Algebra System
 Exec=ComputerAlgebraSystem
+Icon=accessories-calculator
 Type=Application
 Categories=Education;Science;
 Comment=A computer algebra system for mathematical computations
