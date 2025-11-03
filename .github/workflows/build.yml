@@ -17,7 +17,7 @@ jobs:
     - name: Install Qt and dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev wget file
+        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev wget file imagemagick
         
     - name: Build application
       run: |
@@ -32,7 +32,7 @@ jobs:
         chmod +x linuxdeploy-x86_64.AppImage
         
         mkdir -p assets
-        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
+        convert -size 256x256 xc:#2E86AB assets/icon.png
         
         cat > ComputerAlgebraSystem.desktop << EOF
         [Desktop Entry]
