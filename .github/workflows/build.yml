@@ -1,15 +1,64 @@
-name: Build Linux
+name: Build and Test
 
-on: [push, pull_request]
+on:
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
-      - run: |
-          sudo apt update && sudo apt install -y qt6-base-dev
-          mkdir build && cd build
-          qmake ../ComputerAlgebraSystem.pro && make
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.5.0'
+        cached: 'true'
+        
+    - name: Find Qt path and add to PATH
+      run: |
+        # Ищем путь к qmake
+        QT_PATH=$(find $HOME/Qt -name "qmake" -type f | head -1 | xargs dirname)
+        echo "Found qmake in: $QT_PATH"
+        echo "$QT_PATH" >> $GITHUB_PATH
+        
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libgl1-mesa-dev
+        
+    - name: Verify Qt installation
+      run: |
+        which qmake || (echo "qmake not found!" && exit 1)
+        qmake --version || (echo "qmake not working!" && exit 1)
+        
+    - name: Create build directory
+      run: mkdir build
+      
+    - name: Configure and Build
+      run: |
+        cd build
+        qmake ../ComputerAlgebraSystem.pro || (echo "qmake failed!" && exit 1)
+        make -j4 || (echo "make failed!" && exit 1)
+        
+    - name: Test Binary
+      run: |
+        cd build
+        if [ -f ComputerAlgebraSystem ]; then
+          echo "✅ Linux binary built successfully"
+          file ComputerAlgebraSystem
+        else
+          echo "❌ Binary not found!"
           ls -la
-          [ -f "ComputerAlgebraSystem" ] && echo "✅ SUCCESS" || echo "❌ FAIL"
+          exit 1
+        fi
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ComputerAlgebraSystem-Linux
+        path: build/ComputerAlgebraSystem
+        retention-days: 3
