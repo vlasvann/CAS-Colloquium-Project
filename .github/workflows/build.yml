@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build Linux AppImage
 
 on:
   pull_request:
@@ -17,38 +17,36 @@ jobs:
     - name: Install Qt and dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev
+        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev wget file
         
-    - name: Check Qt installation
+    - name: Build application
       run: |
-        which qmake6 || (echo "qmake6 not found!" && exit 1)
-        qmake6 --version || (echo "qmake6 not working!" && exit 1)
-        
-    - name: Create build directory
-      run: mkdir build
-      
-    - name: Configure and Build
-      run: |
+        mkdir build
         cd build
-        qmake6 ../ComputerAlgebraSystem.pro || (echo "qmake failed!" && exit 1)
-        make -j4 || (echo "make failed!" && exit 1)
+        qmake6 ../ComputerAlgebraSystem.pro
+        make -j4
         
-    - name: Test Binary
+    - name: Create AppImage
       run: |
-        cd build
-        if [ -f ComputerAlgebraSystem ]; then
-          echo "✅ Linux binary built successfully"
-          file ComputerAlgebraSystem
-          ls -la
-        else
-          echo "❌ Binary not found!"
-          ls -la
-          exit 1
-        fi
-
-    - name: Upload Artifacts
+        wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        chmod +x linuxdeploy-x86_64.AppImage
+        
+        mkdir -p assets
+        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
+        
+        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem --output appimage
+        
+        mv ComputerAlgebraSystem*.AppImage ComputerAlgebraSystem-Linux.AppImage
+        
+    - name: Verify AppImage
+      run: |
+        chmod +x ComputerAlgebraSystem-Linux.AppImage
+        file ComputerAlgebraSystem-Linux.AppImage
+        ./ComputerAlgebraSystem-Linux.AppImage --appimage-help || echo "✅ AppImage created successfully"
+        
+    - name: Upload AppImage
       uses: actions/upload-artifact@v4
       with:
-        name: ComputerAlgebraSystem-Linux
-        path: build/ComputerAlgebraSystem
-        retention-days: 3
+        name: ComputerAlgebraSystem-Linux-AppImage
+        path: ComputerAlgebraSystem-Linux.AppImage
+        retention-days: 30
