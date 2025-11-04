@@ -46,69 +46,40 @@ jobs:
         path: ComputerAlgebraSystem
         retention-days: 30
 
-  build-windows:
+    build-windows:
     runs-on: windows-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Install Qt
+    - name: Install Qt with MinGW
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.9.3'
         host: windows
         target: desktop
-        arch: win64_msvc2022_64  # ← Используем MSVC вместо MinGW
+        arch: win64_mingw
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
-
-    - name: Build project
-      shell: cmd
+    - name: Build with MinGW (простой способ)
       run: |
-        echo 🏗️ Building with MSVC...
-        qmake -version
-        qmake ComputerAlgebraSystem.pro -spec win32-msvc "CONFIG+=release"
-        nmake
-        echo ✅ Build completed
+        echo "🏗️ Building with MinGW..."
+        
+        # Используем полные пути
+        & "C:\Qt\6.9.3\mingw_64\bin\qmake.exe" ComputerAlgebraSystem.pro
+        & "C:\Qt\6.9.3\mingw_64\bin\mingw32-make.exe"
+        
+        echo "✅ Build completed"
 
     - name: Verify binary
       run: |
-        echo "🔍 Looking for Windows binary..."
         if (Test-Path "release\ComputerAlgebraSystem.exe") {
-          echo "✅ Binary found in release folder"
           copy release\ComputerAlgebraSystem.exe .
+          echo "✅ Binary ready"
         } else {
-          echo "❌ Binary not found in release/"
-          Get-ChildItem -Recurse -Include *.exe
+          echo "❌ Binary not found"
           exit 1
         }
-
-    - name: Deploy dependencies
-      run: |
-        echo "📦 Deploying Windows dependencies..."
-        windeployqt --release ComputerAlgebraSystem.exe
-        echo "✅ Dependencies deployed"
-
-    - name: Create Windows portable package
-      run: |
-        echo "📦 Creating Windows portable package..."
-        mkdir PortableApp
-        copy ComputerAlgebraSystem.exe PortableApp\
-        copy *.dll PortableApp\ 2>$null || echo "No DLLs"
-        if (Test-Path "platforms") { copy platforms PortableApp\ -Recurse }
-        if (Test-Path "imageformats") { copy imageformats PortableApp\ -Recurse }
-        
-        Compress-Archive -Path PortableApp\* -DestinationPath ComputerAlgebraSystem-Windows-Portable.zip -Force
-        echo "✅ Portable package created"
-
-    - name: Upload Windows artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ComputerAlgebraSystem-Windows-Portable.zip
-        path: ComputerAlgebraSystem-Windows-Portable.zip
-        retention-days: 30
 
     - name: Upload Windows executable
       uses: actions/upload-artifact@v4
