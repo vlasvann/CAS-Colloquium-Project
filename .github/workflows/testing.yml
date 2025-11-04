@@ -21,61 +21,47 @@ jobs:
           arch: win64_mingw
           cache: true
 
-      - name: Install CMake
-        uses: lukka/get-cmake@latest
-
-      - name: Build with CMake (рабочий способ)
+      - name: Build with qmake (исправленная версия)
+        shell: bash
         run: |
-          echo "🏗️ Building with CMake..."
+          echo "🏗️ Building with qmake..."
           
-          # Создаем папку для сборки
-          mkdir build
-          cd build
+          # Используем bash и правильные пути
+          export PATH="/c/Qt/6.9.3/mingw_64/bin:$PATH"
           
-          echo "🔧 Configuring with CMake..."
-          cmake .. -G "MinGW Makefiles" -DCMAKE_PREFIX_PATH="C:/Qt/6.9.3/mingw_64/lib/cmake" -DCMAKE_BUILD_TYPE=Release
+          echo "🔧 Checking tools..."
+          which qmake
+          which g++
+          which mingw32-make
           
-          echo "🔨 Building application..."
-          cmake --build . --config Release
+          qmake --version
+          g++ --version
+          
+          echo "🔨 Running qmake..."
+          qmake ComputerAlgebraSystem.pro -spec win32-g++
+          
+          echo "🔨 Running make..."
+          mingw32-make
           
           echo "✅ Build completed"
 
       - name: Verify binary
         run: |
           echo "🔍 Looking for binary..."
-          if (Test-Path "build\ComputerAlgebraSystem.exe") {
-            echo "✅ Binary found in build folder"
-            copy build\ComputerAlgebraSystem.exe .\
-          } elseif (Test-Path "build\Release\ComputerAlgebraSystem.exe") {
-            echo "✅ Binary found in build/Release folder"
-            copy build\Release\ComputerAlgebraSystem.exe .\
-          } else {
+          if [ -f "release/ComputerAlgebraSystem.exe" ]; then
+            echo "✅ Binary found in release folder"
+            cp release/ComputerAlgebraSystem.exe .
+          elif [ -f "ComputerAlgebraSystem.exe" ]; then
+            echo "✅ Binary found in root folder"
+          else
             echo "❌ Binary not found"
-            Get-ChildItem -Recurse -Include *.exe
+            find . -name "*.exe" -type f
             exit 1
-          }
+          fi
 
-      - name: Deploy dependencies
-        run: |
-          echo "📦 Deploying dependencies..."
-          windeployqt.exe --release ComputerAlgebraSystem.exe
-          echo "✅ Dependencies deployed"
-
-      - name: Create portable package
-        run: |
-          echo "📦 Creating portable package..."
-          mkdir PortableApp
-          copy ComputerAlgebraSystem.exe PortableApp\
-          copy *.dll PortableApp\ 2>$null || echo "No DLLs"
-          if (Test-Path "platforms") { copy platforms PortableApp\ -Recurse }
-          if (Test-Path "imageformats") { copy imageformats PortableApp\ -Recurse }
-          
-          Compress-Archive -Path PortableApp\* -DestinationPath ComputerAlgebraSystem-Windows.zip -Force
-          echo "✅ Package created"
-
-      - name: Upload artifacts
+      - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: ComputerAlgebraSystem-Windows.zip
-          path: ComputerAlgebraSystem-Windows.zip
+          name: ComputerAlgebraSystem-Windows.exe
+          path: ComputerAlgebraSystem.exe
           retention-days: 30
