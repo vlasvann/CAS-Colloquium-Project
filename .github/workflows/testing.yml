@@ -14,23 +14,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Qt
-      uses: jurplel/install-qt-action@v3
+    - name: Build with Qt CI Action
+      uses: benlau/qtci@v2
       with:
-        version: '6.9.3'
-        target: 'desktop'
-        arch: 'win64_mingw'
-        
-    - name: Build with qmake
-      run: |
-        echo "🏗️ Building with qmake..."
-        
-        # Используем ПРАВИЛЬНЫЙ путь из переменных окружения
-        & "$env:Qt6_DIR\bin\qmake.exe" ComputerAlgebraSystem.pro
-        & "$env:Qt6_DIR\bin\mingw32-make.exe"
-        
-        echo "✅ Build completed"
-        
+        compiler: mingw81_64
+        platform: windows
+        command: |
+          qmake ComputerAlgebraSystem.pro
+          mingw32-make
+      env:
+        QTCI_VERSION: 6.9.3
+        QTCI_ARCH: win64_mingw
+
     - name: Verify binary
       run: |
         echo "🔍 Looking for binary..."
