@@ -1,67 +1,35 @@
-name: 🔧 Build Windows Application
+name: Build Qt Project
+
 on:
-  pull_request:
   push:
-    branches: [BabinTest, main]
-  workflow_dispatch:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
+    
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.9.3'
-          host: windows
-          target: desktop
-          arch: win64_mingw
-          cache: true
-
-      - name: Build with qmake (исправленная версия)
-        shell: bash
-        run: |
-          echo "🏗️ Building with qmake..."
-          
-          # Используем bash и правильные пути
-          export PATH="/c/Qt/6.9.3/mingw_64/bin:$PATH"
-          
-          echo "🔧 Checking tools..."
-          which qmake
-          which g++
-          which mingw32-make
-          
-          qmake --version
-          g++ --version
-          
-          echo "🔨 Running qmake..."
-          qmake ComputerAlgebraSystem.pro -spec win32-g++
-          
-          echo "🔨 Running make..."
-          mingw32-make
-          
-          echo "✅ Build completed"
-
-      - name: Verify binary
-        run: |
-          echo "🔍 Looking for binary..."
-          if [ -f "release/ComputerAlgebraSystem.exe" ]; then
-            echo "✅ Binary found in release folder"
-            cp release/ComputerAlgebraSystem.exe .
-          elif [ -f "ComputerAlgebraSystem.exe" ]; then
-            echo "✅ Binary found in root folder"
-          else
-            echo "❌ Binary not found"
-            find . -name "*.exe" -type f
-            exit 1
-          fi
-
-      - name: Upload binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: ComputerAlgebraSystem-Windows.exe
-          path: ComputerAlgebraSystem.exe
-          retention-days: 30
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.9.3'
+        target: 'desktop'
+        arch: 'win64_mingw'
+        
+    - name: Build with qmake
+      run: |
+        echo "🏗️ Building with qmake..."
+        # Используем полные пути как в логе
+        /d/a/CAS-Colloquium-Project/Qt/6.9.3/mingw_64/bin/qmake
+        /d/a/CAS-Colloquium-Project/Qt/6.9.3/mingw_64/bin/mingw32-make
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ComputerAlgebraSystem
+        path: build/ComputerAlgebraSystem.exe
