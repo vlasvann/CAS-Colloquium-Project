@@ -1,19 +1,12 @@
 #include <QApplication>
-#include <QMainWindow>
-#include <QLabel>
+#include "MainWindow.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    
-    QMainWindow window;
-    QLabel *label = new QLabel("Computer Algebra System");
-    label->setAlignment(Qt::AlignCenter);
-    
-    window.setCentralWidget(label);
-    window.setWindowTitle("Computer Algebra System");
-    window.resize(400, 300);
+    app.setWindowIcon(QIcon("C:/Users/tomil/Downloads/icon1.jpg"));
+    MainWindow window;
     window.show();
-    
+
     return app.exec();
 }
