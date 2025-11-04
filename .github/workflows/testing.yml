@@ -3,26 +3,27 @@ name: Build and Release Qt App - Multiplatform
 on:
   push:
     branches:
-      - BabinTest
+      - BabinTest  # ← РАБОТАЕТ ДЛЯ ВЕТКИ BabinTest
   release:
     types: [created]
 
 jobs:
   build-matrix:
     strategy:
+      fail-fast: false  # ← КАЖДЫЙ JOB РАБОТАЕТ НЕЗАВИСИМО
       matrix:
         include:
           - os: windows-latest
             qt_host: windows
             qmake_spec: win32-msvc
             artifact: ComputerAlgebraSystem-windows-x64.zip
-            binary_path: ComputerAlgebraSystem.exe  # ← ИЗМЕНИТЕ НА РЕАЛЬНОЕ ИМЯ
+            binary_path: ComputerAlgebraSystem.exe
             deploy_cmd: windeployqt --release ComputerAlgebraSystem.exe
           - os: ubuntu-latest
             qt_host: linux
             qmake_spec: linux-g++
             artifact: ComputerAlgebraSystem-linux-x64.tar.gz
-            binary_path: ComputerAlgebraSystem  # ← ИЗМЕНИТЕ НА РЕАЛЬНОЕ ИМЯ
+            binary_path: ComputerAlgebraSystem
             deploy_cmd: |
               mkdir -p deployment
               cp ComputerAlgebraSystem deployment/
@@ -30,26 +31,25 @@ jobs:
             qt_host: macos
             qmake_spec: macx-clang
             artifact: ComputerAlgebraSystem-macos-x64.zip
-            binary_path: ComputerAlgebraSystem.app  # ← ИЗМЕНИТЕ НА РЕАЛЬНОЕ ИМЯ
+            binary_path: ComputerAlgebraSystem.app
             deploy_cmd: |
               macdeployqt ComputerAlgebraSystem.app -dmg
     
     runs-on: ${{ matrix.os }}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Qt
-        uses: jurplel/setup-qt-action@v3
+        uses: actions/setup-qt@v1  # ← ИСПРАВЛЕННЫЙ ACTION
         with:
-          version: 6.9.3
-          host: ${{ matrix.qt_host }}
-          target: desktop
+          qt-version: '6.9.3'
 
       - name: Build with qmake
         run: |
           qmake -version
-          qmake ComputerAlgebraSystem.pro -spec ${{ matrix.qmake_spec }} "CONFIG+=release"  # ← ИЗМЕНИТЕ ИМЯ .pro ФАЙЛА
+          qmake ComputerAlgebraSystem.pro -spec ${{ matrix.qmake_spec }} "CONFIG+=release"
           make -j4
 
       - name: Verify binary exists
@@ -79,7 +79,7 @@ jobs:
           fi
 
       - name: Upload to Release
-        if: github.event_name == 'release'  # ← ВАЖНО: ТОЛЬКО ДЛЯ РЕЛИЗОВ
+        if: github.event_name == 'release'  # ← ТОЛЬКО ДЛЯ РЕЛИЗОВ
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
