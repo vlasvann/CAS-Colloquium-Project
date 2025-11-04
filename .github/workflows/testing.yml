@@ -46,7 +46,7 @@ jobs:
         path: ComputerAlgebraSystem
         retention-days: 30
 
-    build-windows:
+  build-windows:  # ← ЭТА СТРОКА ДОЛЖНА БЫТЬ НА ТОМ ЖЕ УРОВНЕ ЧТО И build-linux
     runs-on: windows-latest
     
     steps:
@@ -61,7 +61,7 @@ jobs:
         target: desktop
         arch: win64_mingw
 
-    - name: Build with MinGW (простой способ)
+    - name: Build with MinGW
       run: |
         echo "🏗️ Building with MinGW..."
         
