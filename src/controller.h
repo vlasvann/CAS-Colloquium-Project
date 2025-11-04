@@ -1,10 +1,10 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#include "Natural.h"
-#include "Integer.h"
-#include "Rational.h"
-#include "Polynomial.h"
+#include "natural.h"
+#include "integer.h"
+#include "rational.h"
+#include "polynomial.h"
 #include "parser.h"
 #include <map>
 #include <vector>
