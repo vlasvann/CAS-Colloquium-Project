@@ -3,33 +3,30 @@ name: Build and Release Qt App - Multiplatform
 on:
   push:
     branches:
-      - BabinTest  # ← РАБОТАЕТ ДЛЯ ВЕТКИ BabinTest
+      - BabinTest
   release:
     types: [created]
 
 jobs:
   build-matrix:
     strategy:
-      fail-fast: false  # ← КАЖДЫЙ JOB РАБОТАЕТ НЕЗАВИСИМО
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
-            qt_host: windows
-            qmake_spec: win32-msvc
+            qt_version: '6.9.3'
             artifact: ComputerAlgebraSystem-windows-x64.zip
             binary_path: ComputerAlgebraSystem.exe
             deploy_cmd: windeployqt --release ComputerAlgebraSystem.exe
           - os: ubuntu-latest
-            qt_host: linux
-            qmake_spec: linux-g++
+            qt_version: '6.9.3'
             artifact: ComputerAlgebraSystem-linux-x64.tar.gz
             binary_path: ComputerAlgebraSystem
             deploy_cmd: |
               mkdir -p deployment
               cp ComputerAlgebraSystem deployment/
           - os: macos-latest
-            qt_host: macos
-            qmake_spec: macx-clang
+            qt_version: '6.9.3'
             artifact: ComputerAlgebraSystem-macos-x64.zip
             binary_path: ComputerAlgebraSystem.app
             deploy_cmd: |
@@ -42,14 +39,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Qt
-        uses: actions/setup-qt@v1  # ← ИСПРАВЛЕННЫЙ ACTION
+        uses: jurplel/install-qt-action@v3  # ← РАБОЧИЙ ACTION
         with:
-          qt-version: '6.9.3'
+          version: ${{ matrix.qt_version }}
+          host: ${{ matrix.os }}
+          target: desktop
+          install-deps: true
 
       - name: Build with qmake
         run: |
           qmake -version
-          qmake ComputerAlgebraSystem.pro -spec ${{ matrix.qmake_spec }} "CONFIG+=release"
+          qmake ComputerAlgebraSystem.pro -config release
           make -j4
 
       - name: Verify binary exists
@@ -68,27 +68,14 @@ jobs:
         shell: bash
         run: |
           if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            # Для Windows - собираем ВСЕ файлы из текущей папки
             zip -r ${{ matrix.artifact }} *.exe *.dll platforms/ imageformats/
           elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            # Для Linux - включаем все зависимости
             tar -czf ${{ matrix.artifact }} deployment/
           else
-            # Для macOS - package the app bundle
             zip -r ${{ matrix.artifact }} ComputerAlgebraSystem.app
           fi
 
-      - name: Upload to Release
-        if: github.event_name == 'release'  # ← ТОЛЬКО ДЛЯ РЕЛИЗОВ
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ matrix.artifact }}
-          asset_name: ${{ matrix.artifact }}
-          tag: ${{ github.ref }}
-
-      - name: Upload build artifacts (for testing)
-        if: github.event_name == 'push'  # ← ДЛЯ ТЕСТИРОВАНИЯ ПРИ ПУШЕ
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
