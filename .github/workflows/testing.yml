@@ -16,38 +16,26 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            buildname: 'Windows (MSVC)'
-            qt_arch: win64_msvc2022_64
+            buildname: 'Windows (MinGW)'
+            qt_arch: win64_mingw
             artifact: ComputerAlgebraSystem-windows-x64.zip
             binary_path: ComputerAlgebraSystem.exe
-            deploy_cmd: windeployqt --release ComputerAlgebraSystem.exe
           - os: ubuntu-latest
             buildname: 'Linux (GCC)'
             qt_arch: gcc_64
             artifact: ComputerAlgebraSystem-linux-x64.tar.gz
             binary_path: ComputerAlgebraSystem
-            deploy_cmd: |
-              mkdir -p deployment
-              cp ComputerAlgebraSystem deployment/
           - os: macos-latest
             buildname: 'macOS (Clang)'
             qt_arch: clang_64
             artifact: ComputerAlgebraSystem-macos-x64.zip
             binary_path: ComputerAlgebraSystem.app
-            deploy_cmd: |
-              macdeployqt ComputerAlgebraSystem.app -dmg
 
     steps:
     - name: Checkout source code
       uses: actions/checkout@v4
 
-    - name: Setup Visual Studio (Windows only)
-      if: matrix.os == 'windows-latest'
-      uses: microsoft/setup-msbuild@v2
-      with:
-        vs-version: '2022'
-
-    - name: Install Qt
+    - name: Install Qt (без дополнительных модулей)
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.9.3'
@@ -55,21 +43,20 @@ jobs:
         target: desktop
         arch: ${{matrix.qt_arch}}
         cache: true
-        modules: qt5compat
+        # Убрал modules: qt5compat - вызывает ошибку
 
     - name: Build with qmake (Windows)
       if: matrix.os == 'windows-latest'
-      shell: cmd
       run: |
         qmake -version
-        qmake ComputerAlgebraSystem.pro -spec win32-msvc "CONFIG+=release"
-        nmake
+        qmake ComputerAlgebraSystem.pro -spec win32-g++ "CONFIG+=release"
+        make -j4
 
     - name: Build with qmake (macOS)
       if: matrix.os == 'macos-latest'
       run: |
         qmake -version
-        qmake ComputerAlgebraSystem.pro -config release "CONFIG -= static"
+        qmake ComputerAlgebraSystem.pro -config release
         make -j4
 
     - name: Build with qmake (Linux)
@@ -81,25 +68,18 @@ jobs:
 
     - name: Verify binary exists
       run: |
-        if [ ! -f "${{ matrix.binary_path }}" ]; then
-          echo "❌ Binary not found at ${{ matrix.binary_path }}"
-          echo "Available files:"
-          find . -name "*.exe" -o -name "*.app" -o -type f -executable
+        echo "🔍 Looking for binary: ${{ matrix.binary_path }}"
+        if [ -f "${{ matrix.binary_path }}" ]; then
+          echo "✅ Binary found: ${{ matrix.binary_path }}"
+          ls -la "${{ matrix.binary_path }}"
+        else
+          echo "❌ Binary not found at: ${{ matrix.binary_path }}"
+          echo "📁 Available files in current directory:"
+          find . -type f -name "*.exe" -o -name "*.app" -o -type f -executable | head -20
+          echo "📁 All files:"
+          ls -la
           exit 1
         fi
-        echo "✅ Binary found: ${{ matrix.binary_path }}"
-
-    - name: Deploy dependencies (Windows)
-      if: matrix.os == 'windows-latest'
-      run: ${{ matrix.deploy_cmd }}
-
-    - name: Deploy dependencies (Linux)
-      if: matrix.os == 'ubuntu-latest'
-      run: ${{ matrix.deploy_cmd }}
-
-    - name: Deploy dependencies (macOS)
-      if: matrix.os == 'macos-latest'
-      run: ${{ matrix.deploy_cmd }}
 
     - name: Package application
       shell: bash
@@ -107,19 +87,22 @@ jobs:
         echo "📦 Packaging application for ${{ matrix.os }}..."
         
         if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          # Для Windows - собираем все необходимые файлы
           echo "Creating Windows package..."
-          zip -r ${{ matrix.artifact }} *.exe *.dll platforms/ imageformats/ styles/
+          # Просто упаковываем бинарник
+          zip -r ${{ matrix.artifact }} ${{ matrix.binary_path }}
           
         elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          # Для Linux - создаем архив с бинарником
           echo "Creating Linux package..."
-          tar -czf ${{ matrix.artifact }} deployment/
+          tar -czf ${{ matrix.artifact }} ${{ matrix.binary_path }}
           
         else
-          # Для macOS - упаковываем .app бандл
           echo "Creating macOS package..."
-          zip -r ${{ matrix.artifact }} ComputerAlgebraSystem.app
+          if [ -d "ComputerAlgebraSystem.app" ]; then
+            zip -r ${{ matrix.artifact }} ComputerAlgebraSystem.app
+          else
+            # Если .app не создался, ищем бинарник
+            find . -name "ComputerAlgebraSystem" -type f -exec zip ${{ matrix.artifact }} {} \;
+          fi
         fi
         
         echo "✅ Package created: ${{ matrix.artifact }}"
@@ -137,4 +120,3 @@ jobs:
         echo "🎊 Build completed successfully!"
         echo "Platform: ${{ matrix.buildname }}"
         echo "Artifact: ${{ matrix.artifact }}"
-        echo "Binary: ${{ matrix.binary_path }}"
