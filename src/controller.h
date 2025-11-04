@@ -66,6 +66,7 @@ public:
                                  const std::vector<std::string>& inputs);
 
 private:
+	Parser m_parser;													///< Объект парсера
     // Контейнеры для хранения метаданных операций
     std::map<std::string, std::vector<std::string>> m_typeMethods;      ///< Соответствие типов данных и доступных методов
     std::map<std::string, int> m_methodOperands;                        ///< Количество операндов для каждого метода

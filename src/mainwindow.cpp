@@ -1,5 +1,6 @@
-#include "MainWindow.h"
-#include "InputDialog.h"
+#include "mainwindow.h"
+#include "inputdialog.h"
+#include <stdexcept>
 
 /*
  * Developed by Danil Babin group 4381

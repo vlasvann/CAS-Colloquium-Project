@@ -1,4 +1,5 @@
 #include "controller.h"
+#include <stdexcept>
 
 /**
  * Developed by Danil Babin group 4381
