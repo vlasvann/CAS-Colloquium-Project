@@ -25,46 +25,138 @@ jobs:
     - name: Build project
       run: |
         echo "🏗️ Building project..."
-        
-        # Проверяем что всё установлено
-        qmake6 --version || qmake --version
-        g++ --version
-        make --version
-        
-        # Сборка
         qmake6 ComputerAlgebraSystem.pro || qmake ComputerAlgebraSystem.pro
         make -j4
-        
         echo "✅ Build completed"
 
     - name: Verify binary
       run: |
-        echo "🔍 Looking for binary..."
         if [ -f "build/ComputerAlgebraSystem" ]; then
           echo "✅ Binary found in build folder"
           cp build/ComputerAlgebraSystem .
-          ls -la ComputerAlgebraSystem
-          file ComputerAlgebraSystem
-        elif [ -f "ComputerAlgebraSystem" ]; then
-          echo "✅ Binary found in root folder"
         else
           echo "❌ Binary not found"
-          find . -name "ComputerAlgebraSystem" -type f
           exit 1
         fi
         
-    - name: Upload build artifacts
+    - name: Upload Linux artifact
       uses: actions/upload-artifact@v4
       with:
         name: ComputerAlgebraSystem-Linux
         path: ComputerAlgebraSystem
         retention-days: 30
 
-    - name: Show success message
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.9.3'
+        host: windows
+        target: desktop
+        arch: win64_msvc2022_64  # ← Используем MSVC вместо MinGW
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Build project
+      shell: cmd
       run: |
-        echo ""
-        echo "🎉 SUCCESS! 🎉"
-        echo "✅ Linux build completed successfully!"
-        echo "📦 Artifact: ComputerAlgebraSystem-Linux"
-        echo "🚀 Ready to download from Actions tab"
-        echo ""
+        echo 🏗️ Building with MSVC...
+        qmake -version
+        qmake ComputerAlgebraSystem.pro -spec win32-msvc "CONFIG+=release"
+        nmake
+        echo ✅ Build completed
+
+    - name: Verify binary
+      run: |
+        echo "🔍 Looking for Windows binary..."
+        if (Test-Path "release\ComputerAlgebraSystem.exe") {
+          echo "✅ Binary found in release folder"
+          copy release\ComputerAlgebraSystem.exe .
+        } else {
+          echo "❌ Binary not found in release/"
+          Get-ChildItem -Recurse -Include *.exe
+          exit 1
+        }
+
+    - name: Deploy dependencies
+      run: |
+        echo "📦 Deploying Windows dependencies..."
+        windeployqt --release ComputerAlgebraSystem.exe
+        echo "✅ Dependencies deployed"
+
+    - name: Create Windows portable package
+      run: |
+        echo "📦 Creating Windows portable package..."
+        mkdir PortableApp
+        copy ComputerAlgebraSystem.exe PortableApp\
+        copy *.dll PortableApp\ 2>$null || echo "No DLLs"
+        if (Test-Path "platforms") { copy platforms PortableApp\ -Recurse }
+        if (Test-Path "imageformats") { copy imageformats PortableApp\ -Recurse }
+        
+        Compress-Archive -Path PortableApp\* -DestinationPath ComputerAlgebraSystem-Windows-Portable.zip -Force
+        echo "✅ Portable package created"
+
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ComputerAlgebraSystem-Windows-Portable.zip
+        path: ComputerAlgebraSystem-Windows-Portable.zip
+        retention-days: 30
+
+    - name: Upload Windows executable
+      uses: actions/upload-artifact@v4
+      with:
+        name: ComputerAlgebraSystem-Windows.exe
+        path: ComputerAlgebraSystem.exe
+        retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.9.3'
+        host: mac
+        target: desktop
+        arch: clang_64
+
+    - name: Build project
+      run: |
+        echo "🏗️ Building on macOS..."
+        qmake -version
+        qmake ComputerAlgebraSystem.pro -config release
+        make -j4
+        echo "✅ Build completed"
+
+    - name: Verify binary
+      run: |
+        echo "🔍 Looking for macOS binary..."
+        if [ -d "ComputerAlgebraSystem.app" ]; then
+          echo "✅ macOS app bundle found"
+        elif [ -f "ComputerAlgebraSystem" ]; then
+          echo "✅ Binary found"
+        else
+          echo "❌ Binary not found"
+          find . -name "ComputerAlgebraSystem*" -type f -o -type d
+          exit 1
+        fi
+
+    - name: Upload macOS artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ComputerAlgebraSystem-macOS
+        path: ComputerAlgebraSystem.app
+        if-no-files-found: ignore
+        retention-days: 30
