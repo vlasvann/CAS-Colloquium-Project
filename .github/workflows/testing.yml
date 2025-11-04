@@ -46,7 +46,7 @@ jobs:
         path: ComputerAlgebraSystem
         retention-days: 30
 
-  build-windows:  # ← ЭТА СТРОКА ДОЛЖНА БЫТЬ НА ТОМ ЖЕ УРОВНЕ ЧТО И build-linux
+  build-windows:
     runs-on: windows-latest
     
     steps:
@@ -65,9 +65,9 @@ jobs:
       run: |
         echo "🏗️ Building with MinGW..."
         
-        # Используем полные пути
-        & "C:\Qt\6.9.3\mingw_64\bin\qmake.exe" ComputerAlgebraSystem.pro
-        & "C:\Qt\6.9.3\mingw_64\bin\mingw32-make.exe"
+        # Используем ПРАВИЛЬНЫЙ путь из лога установки
+        & "D:\a\CAS-Colloquium-Project\Qt\6.9.3\mingw_64\bin\qmake.exe" ComputerAlgebraSystem.pro
+        & "D:\a\CAS-Colloquium-Project\Qt\6.9.3\mingw_64\bin\mingw32-make.exe"
         
         echo "✅ Build completed"
 
@@ -77,8 +77,15 @@ jobs:
           copy release\ComputerAlgebraSystem.exe .
           echo "✅ Binary ready"
         } else {
-          echo "❌ Binary not found"
-          exit 1
+          echo "❌ Binary not found in release/"
+          # Ищем в других местах
+          if (Test-Path "build\ComputerAlgebraSystem.exe") {
+            copy build\ComputerAlgebraSystem.exe .
+            echo "✅ Binary found in build/"
+          } else {
+            Get-ChildItem -Recurse -Include *.exe
+            exit 1
+          }
         }
 
     - name: Upload Windows executable
