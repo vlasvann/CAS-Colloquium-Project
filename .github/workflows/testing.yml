@@ -14,22 +14,25 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            qt_host: windows  # ← ИСПРАВЛЕНО: windows вместо windows-latest
+            qt_host: windows
             qt_version: '6.9.3'
+            qt_arch: win64_msvc2022_64  # ← ИСПРАВЛЕННАЯ АРХИТЕКТУРА
             artifact: ComputerAlgebraSystem-windows-x64.zip
             binary_path: ComputerAlgebraSystem.exe
             deploy_cmd: windeployqt --release ComputerAlgebraSystem.exe
           - os: ubuntu-latest
-            qt_host: linux    # ← ИСПРАВЛЕНО: linux вместо ubuntu-latest
+            qt_host: linux
             qt_version: '6.9.3'
+            qt_arch: gcc_64  # ← АРХИТЕКТУРА ДЛЯ LINUX
             artifact: ComputerAlgebraSystem-linux-x64.tar.gz
             binary_path: ComputerAlgebraSystem
             deploy_cmd: |
               mkdir -p deployment
               cp ComputerAlgebraSystem deployment/
           - os: macos-latest
-            qt_host: mac      # ← ИСПРАВЛЕНО: mac вместо macos-latest
+            qt_host: mac
             qt_version: '6.9.3'
+            qt_arch: clang_64  # ← АРХИТЕКТУРА ДЛЯ MAC
             artifact: ComputerAlgebraSystem-macos-x64.zip
             binary_path: ComputerAlgebraSystem.app
             deploy_cmd: |
@@ -45,8 +48,9 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           version: ${{ matrix.qt_version }}
-          host: ${{ matrix.qt_host }}  # ← ТЕПЕРЬ ИСПОЛЬЗУЕМ qt_host
+          host: ${{ matrix.qt_host }}
           target: desktop
+          arch: ${{ matrix.qt_arch }}  # ← ДОБАВЛЕН ПАРАМЕТР АРХИТЕКТУРЫ
           install-deps: true
 
       - name: Build with qmake
