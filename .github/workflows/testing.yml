@@ -9,6 +9,12 @@ jobs:
   build-windows-installer:
     runs-on: windows-latest
     steps:
+      - name: Install MinGW (компилятор для Windows)
+        uses: egor-tensin/setup-mingw@v1
+        with:
+          platform: x64
+          version: 11.2.0
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
@@ -16,23 +22,40 @@ jobs:
           host: windows
           target: desktop
           arch: win64_mingw
-          tools: tools_ifw  # ← Qt Installer Framework
+          tools: tools_ifw
           add-tools-to-path: true
 
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Build application
+      - name: Setup environment
         run: |
+          echo "🔧 Setting up environment..."
+          echo "PATH=$PATH"
+          echo "MINGW_PATH=C:\msys64\mingw64\bin"
+          g++ --version
+          which g++
+
+      - name: Build application (исправленная версия)
+        run: |
+          echo "🏗️ Building application..."
           qmake -version
-          qmake ComputerAlgebraSystem.pro -spec win32-g++ "CONFIG+=release"
+          
+          # Явно указываем путь к компилятору
+          qmake ComputerAlgebraSystem.pro -spec win32-g++ "CONFIG+=release" "QMAKE_CXX=g++"
+          
+          echo "🔨 Running make..."
           make -j4
+          
+          echo "✅ Build completed"
 
       - name: Verify binary exists
         run: |
-          if (Test-Path "ComputerAlgebraSystem.exe") {
-            echo "✅ Binary found: ComputerAlgebraSystem.exe"
-            dir ComputerAlgebraSystem.exe
+          if (Test-Path "release\ComputerAlgebraSystem.exe") {
+            echo "✅ Binary found in release folder"
+            copy release\ComputerAlgebraSystem.exe .\
+          } elseif (Test-Path "ComputerAlgebraSystem.exe") {
+            echo "✅ Binary found in root folder"
           } else {
             echo "❌ Binary not found"
             Get-ChildItem -Recurse -Include *.exe
@@ -45,19 +68,14 @@ jobs:
 
       - name: Create installer package
         run: |
-          # Создаем папку для установщика
           mkdir installer_package
-          
-          # Копируем бинарник и зависимости
           copy ComputerAlgebraSystem.exe installer_package/
           copy *.dll installer_package/ 2>$null || echo "No DLLs to copy"
           if (Test-Path "platforms") { copy platforms installer_package/ -Recurse }
           if (Test-Path "imageformats") { copy imageformats installer_package/ -Recurse }
           if (Test-Path "styles") { copy styles installer_package/ -Recurse }
           
-          # Создаем ZIP установщик
           Compress-Archive -Path installer_package/* -DestinationPath ComputerAlgebraSystem-Windows-Installer.zip -Force
-          
           echo "📦 Installer package created"
 
       - name: Upload installer artifact
@@ -66,9 +84,3 @@ jobs:
           name: ComputerAlgebraSystem-Windows-Installer.zip
           path: ComputerAlgebraSystem-Windows-Installer.zip
           retention-days: 30
-
-      - name: Show build summary
-        run: |
-          echo "🎊 Windows installer build completed!"
-          echo "Installer: ComputerAlgebraSystem-Windows-Installer.zip"
-          echo "Includes: Application + All Dependencies"
