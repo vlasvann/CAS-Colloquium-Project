@@ -1,5 +1,4 @@
 name: Build Qt Project 
-#52
 
 on:
   push:
