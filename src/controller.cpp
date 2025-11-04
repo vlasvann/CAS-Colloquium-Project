@@ -336,7 +336,7 @@ std::string Controller::executePolynomialOperation(const std::string& method, co
     else if(method == "MUL_PQ_P"){
         if(inputs.size() < 2) throw std::invalid_argument("Вы ввели слишком мало операндов!");
         Polynomial a = m_parser.parsePolynomial(inputs[0]);
-        Rational b = m_parser.parsePolynomial(inputs[1]);
+        Rational b = m_parser.parseRational(inputs[1]);
         Polynomial result = a.MUL_PQ_P(b);
         return m_parser.toString(result);
     }
