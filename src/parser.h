@@ -10,6 +10,7 @@
 
 class Parser {
 public:
+	Parser() = default;
     // Парсинг строк в объекты
     Natural parseNatural(const std::string& input);
     Integer parseInteger(const std::string& input);

@@ -1,7 +1,5 @@
 #include "parser.h"
 
-Parser::Parser() {}
-
 Natural Parser::parseNatural(const std::string &input)
 {
 	(void)input;
