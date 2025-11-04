@@ -1,104 +1,74 @@
-name: 🔨 Build Computer Algebra System
-
+name: 🔧 Build Windows Installer
 on:
-  push:
-    branches: [BabinTest, main]
   pull_request:
+  push:
     branches: [BabinTest, main]
   workflow_dispatch:
 
 jobs:
-  build-matrix:
-    name: ${{matrix.buildname}}
-    runs-on: ${{matrix.os}}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            buildname: 'Windows (MinGW)'
-            qt_arch: win64_mingw
-            qt_version: '6.9.3'
-            artifact: ComputerAlgebraSystem-windows-x64.zip
-            binary_path: ComputerAlgebraSystem.exe
-          - os: ubuntu-latest
-            buildname: 'Linux (GCC)'
-            qt_arch: gcc_64
-            qt_version: '6.9.2'  # ← ИСПРАВЛЕННАЯ ВЕРСИЯ ДЛЯ LINUX
-            artifact: ComputerAlgebraSystem-linux-x64.tar.gz
-            binary_path: ComputerAlgebraSystem
-          - os: macos-latest
-            buildname: 'macOS (Clang)'
-            qt_arch: clang_64
-            qt_version: '6.9.3'
-            artifact: ComputerAlgebraSystem-macos-x64.zip
-            binary_path: ComputerAlgebraSystem.app
-
+  build-windows-installer:
+    runs-on: windows-latest
     steps:
-    - name: Checkout source code
-      uses: actions/checkout@v4
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.9.3'
+          host: windows
+          target: desktop
+          arch: win64_mingw
+          tools: tools_ifw  # ← Qt Installer Framework
+          add-tools-to-path: true
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: ${{matrix.qt_version}}
-        host: ${{ matrix.os == 'windows-latest' && 'windows' || matrix.os == 'ubuntu-latest' && 'linux' || 'mac' }}
-        target: desktop
-        arch: ${{matrix.qt_arch}}
-        cache: true
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
-    - name: Build with qmake (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        qmake -version
-        qmake ComputerAlgebraSystem.pro -spec win32-g++ "CONFIG+=release"
-        make -j4
+      - name: Build application
+        run: |
+          qmake -version
+          qmake ComputerAlgebraSystem.pro -spec win32-g++ "CONFIG+=release"
+          make -j4
 
-    - name: Build with qmake (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        qmake -version
-        qmake ComputerAlgebraSystem.pro -config release
-        make -j4
+      - name: Verify binary exists
+        run: |
+          if (Test-Path "ComputerAlgebraSystem.exe") {
+            echo "✅ Binary found: ComputerAlgebraSystem.exe"
+            dir ComputerAlgebraSystem.exe
+          } else {
+            echo "❌ Binary not found"
+            Get-ChildItem -Recurse -Include *.exe
+            exit 1
+          }
 
-    - name: Build with qmake (Linux)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        qmake -version
-        qmake ComputerAlgebraSystem.pro -config release
-        make -j4
+      - name: Deploy dependencies
+        run: |
+          windeployqt --release ComputerAlgebraSystem.exe
 
-    - name: Verify binary exists
-      run: |
-        echo "🔍 Looking for binary..."
-        if [ -f "ComputerAlgebraSystem" ]; then
-          echo "✅ Binary found: ComputerAlgebraSystem"
-        elif [ -d "ComputerAlgebraSystem.app" ]; then
-          echo "✅ macOS app found"
-        else
-          echo "❌ Binary not found"
-          find . -type f -name "*.exe" -o -name "ComputerAlgebraSystem" -o -type f -executable
-          exit 1
-        fi
+      - name: Create installer package
+        run: |
+          # Создаем папку для установщика
+          mkdir installer_package
+          
+          # Копируем бинарник и зависимости
+          copy ComputerAlgebraSystem.exe installer_package/
+          copy *.dll installer_package/ 2>$null || echo "No DLLs to copy"
+          if (Test-Path "platforms") { copy platforms installer_package/ -Recurse }
+          if (Test-Path "imageformats") { copy imageformats installer_package/ -Recurse }
+          if (Test-Path "styles") { copy styles installer_package/ -Recurse }
+          
+          # Создаем ZIP установщик
+          Compress-Archive -Path installer_package/* -DestinationPath ComputerAlgebraSystem-Windows-Installer.zip -Force
+          
+          echo "📦 Installer package created"
 
-    - name: Package application
-      shell: bash
-      run: |
-        echo "📦 Packaging for ${{ matrix.os }}..."
-        
-        if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          zip -r ${{ matrix.artifact }} ComputerAlgebraSystem.exe
-        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          tar -czf ${{ matrix.artifact }} ComputerAlgebraSystem
-        else
-          zip -r ${{ matrix.artifact }} ComputerAlgebraSystem.app
-        fi
-        
-        echo "✅ Package: ${{ matrix.artifact }}"
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ComputerAlgebraSystem-Windows-Installer.zip
+          path: ComputerAlgebraSystem-Windows-Installer.zip
+          retention-days: 30
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.artifact }}
-        path: ${{ matrix.artifact }}
-        retention-days: 30
+      - name: Show build summary
+        run: |
+          echo "🎊 Windows installer build completed!"
+          echo "Installer: ComputerAlgebraSystem-Windows-Installer.zip"
+          echo "Includes: Application + All Dependencies"
