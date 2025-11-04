@@ -21,5 +21,5 @@ public:
     std::string toString(const Integer& num);
     std::string toString(const Rational& num);
     std::string toString(const Polynomial& poly);
-
+};
 #endif
