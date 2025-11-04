@@ -1,4 +1,4 @@
-#include "InputDialog.h"
+#include "inputdialog.h"
 
 /*
  * Developed by Danil Babin group 4381
