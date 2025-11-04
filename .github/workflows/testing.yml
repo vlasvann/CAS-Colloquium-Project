@@ -2,9 +2,9 @@ name: Build Qt Proj
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ BabinTest ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ BabinTest ]
 
 jobs:
   build:
