@@ -12,34 +12,48 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Install Qt with MSVC (рекомендуется)
+      - name: Setup Visual Studio (исправленная версия)
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: '2022'
+
+      - name: Install Qt with MSVC
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.9.3'
           host: windows
           target: desktop
-          arch: win64_msvc2022_64  # ← ИСПОЛЬЗУЕМ MSVC ВМЕСТО MINGW
+          arch: win64_msvc2022_64
           cache: true
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Build with MSVC
+      - name: Build with MSVC (исправленная версия)
         shell: cmd
         run: |
           echo 🏗️ Building with MSVC...
-          qmake -version
-          qmake ComputerAlgebraSystem.pro -spec win32-msvc "CONFIG+=release"
-          nmake
+          
+          # Проверяем что MSVC доступен
+          cl.exe
+          nmake.exe
+          qmake.exe -version
+          
+          echo 🔨 Running qmake...
+          qmake.exe ComputerAlgebraSystem.pro -spec win32-msvc "CONFIG+=release"
+          
+          echo 🔨 Running nmake...
+          nmake.exe
+          
           echo ✅ Build completed
 
       - name: Verify binary
         run: |
           if (Test-Path "release\ComputerAlgebraSystem.exe") {
+            echo "✅ Binary found in release folder"
             copy release\ComputerAlgebraSystem.exe .\
-            echo "✅ Binary ready"
+          } elseif (Test-Path "ComputerAlgebraSystem.exe") {
+            echo "✅ Binary found in root folder"
           } else {
             echo "❌ Binary not found"
+            Get-ChildItem -Recurse -Include *.exe
             exit 1
           }
 
