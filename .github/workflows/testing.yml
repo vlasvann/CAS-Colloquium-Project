@@ -1,0 +1,96 @@
+name: Build and Release Qt App - Multiplatform
+
+on:
+  push:
+    branches:
+      - BabinTest
+  release:
+    types: [created]
+
+jobs:
+  build-matrix:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            qt_host: windows
+            qmake_spec: win32-msvc
+            artifact: ComputerAlgebraSystem-windows-x64.zip
+            binary_path: ComputerAlgebraSystem.exe  # ← ИЗМЕНИТЕ НА РЕАЛЬНОЕ ИМЯ
+            deploy_cmd: windeployqt --release ComputerAlgebraSystem.exe
+          - os: ubuntu-latest
+            qt_host: linux
+            qmake_spec: linux-g++
+            artifact: ComputerAlgebraSystem-linux-x64.tar.gz
+            binary_path: ComputerAlgebraSystem  # ← ИЗМЕНИТЕ НА РЕАЛЬНОЕ ИМЯ
+            deploy_cmd: |
+              mkdir -p deployment
+              cp ComputerAlgebraSystem deployment/
+          - os: macos-latest
+            qt_host: macos
+            qmake_spec: macx-clang
+            artifact: ComputerAlgebraSystem-macos-x64.zip
+            binary_path: ComputerAlgebraSystem.app  # ← ИЗМЕНИТЕ НА РЕАЛЬНОЕ ИМЯ
+            deploy_cmd: |
+              macdeployqt ComputerAlgebraSystem.app -dmg
+    
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Qt
+        uses: jurplel/setup-qt-action@v3
+        with:
+          version: 6.9.3
+          host: ${{ matrix.qt_host }}
+          target: desktop
+
+      - name: Build with qmake
+        run: |
+          qmake -version
+          qmake ComputerAlgebraSystem.pro -spec ${{ matrix.qmake_spec }} "CONFIG+=release"  # ← ИЗМЕНИТЕ ИМЯ .pro ФАЙЛА
+          make -j4
+
+      - name: Verify binary exists
+        run: |
+          if [ ! -f "${{ matrix.binary_path }}" ]; then
+            echo "Binary not found at ${{ matrix.binary_path }}"
+            echo "Available files:"
+            find . -name "*.exe" -o -name "*.app" -o -type f -executable
+            exit 1
+          fi
+
+      - name: Deploy dependencies
+        run: ${{ matrix.deploy_cmd }}
+
+      - name: Package application
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            # Для Windows - собираем ВСЕ файлы из текущей папки
+            zip -r ${{ matrix.artifact }} *.exe *.dll platforms/ imageformats/
+          elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            # Для Linux - включаем все зависимости
+            tar -czf ${{ matrix.artifact }} deployment/
+          else
+            # Для macOS - package the app bundle
+            zip -r ${{ matrix.artifact }} ComputerAlgebraSystem.app
+          fi
+
+      - name: Upload to Release
+        if: github.event_name == 'release'  # ← ВАЖНО: ТОЛЬКО ДЛЯ РЕЛИЗОВ
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ matrix.artifact }}
+          asset_name: ${{ matrix.artifact }}
+          tag: ${{ github.ref }}
+
+      - name: Upload build artifacts (for testing)
+        if: github.event_name == 'push'  # ← ДЛЯ ТЕСТИРОВАНИЯ ПРИ ПУШЕ
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+          retention-days: 7
