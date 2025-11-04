@@ -336,20 +336,20 @@ std::string Controller::executePolynomialOperation(const std::string& method, co
     else if(method == "MUL_PQ_P"){
         if(inputs.size() < 2) throw std::invalid_argument("Вы ввели слишком мало операндов!");
         Polynomial a = m_parser.parsePolynomial(inputs[0]);
-        Polynomial b = m_parser.parsePolynomial(inputs[1]);
+        Rational b = m_parser.parsePolynomial(inputs[1]);
         Polynomial result = a.MUL_PQ_P(b);
         return m_parser.toString(result);
     }
     else if(method == "LED_P_Q"){
         if(inputs.size() < 1) throw std::invalid_argument("Вы ввели слишком мало операндов!");
         Polynomial a = m_parser.parsePolynomial(inputs[0]);
-        Polynomial result = a.LED_P_Q();
+        Rational result = a.LED_P_Q();
         return m_parser.toString(result);
     }
     else if(method == "DEG_P_N"){
         if(inputs.size() < 1) throw std::invalid_argument("Вы ввели слишком мало операндов!");
         Polynomial a = m_parser.parsePolynomial(inputs[0]);
-        Polynomial result = a.DEG_P_N();
+        Natural result = a.DEG_P_N();
         return m_parser.toString(result);
     }
     else if(method == "MUL_PP_P"){
