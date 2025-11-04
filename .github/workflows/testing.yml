@@ -12,40 +12,38 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Setup Visual Studio (исправленная версия)
-        uses: microsoft/setup-msbuild@v2
-        with:
-          vs-version: '2022'
-
-      - name: Install Qt with MSVC
+      - name: Install Qt with MinGW
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.9.3'
           host: windows
           target: desktop
-          arch: win64_msvc2022_64
+          arch: win64_mingw
           cache: true
 
-      - name: Build with MSVC (исправленная версия)
-        shell: cmd
+      - name: Build with MinGW
         run: |
-          echo 🏗️ Building with MSVC...
+          echo "🏗️ Building with MinGW..."
           
-          # Проверяем что MSVC доступен
-          cl.exe
-          nmake.exe
+          # Добавляем MinGW в PATH
+          $env:PATH = "C:\Qt\6.9.3\mingw_64\bin;" + $env:PATH
+          
+          echo "🔧 Checking tools..."
           qmake.exe -version
+          g++.exe --version
+          mingw32-make.exe --version
           
-          echo 🔨 Running qmake...
-          qmake.exe ComputerAlgebraSystem.pro -spec win32-msvc "CONFIG+=release"
+          echo "🔨 Running qmake..."
+          qmake.exe ComputerAlgebraSystem.pro
           
-          echo 🔨 Running nmake...
-          nmake.exe
+          echo "🔨 Running make..."
+          mingw32-make.exe
           
-          echo ✅ Build completed
+          echo "✅ Build completed"
 
-      - name: Verify binary
+      - name: Verify binary exists
         run: |
+          echo "🔍 Looking for binary..."
           if (Test-Path "release\ComputerAlgebraSystem.exe") {
             echo "✅ Binary found in release folder"
             copy release\ComputerAlgebraSystem.exe .\
@@ -53,13 +51,77 @@ jobs:
             echo "✅ Binary found in root folder"
           } else {
             echo "❌ Binary not found"
-            Get-ChildItem -Recurse -Include *.exe
+            echo "📁 Searching for executable files..."
+            Get-ChildItem -Recurse -Include *.exe | ForEach-Object { echo "Found: $($_.FullName)" }
             exit 1
           }
+          
+          echo "📊 Binary info:"
+          dir ComputerAlgebraSystem.exe
 
-      - name: Upload binary
+      - name: Deploy dependencies with windeployqt
+        run: |
+          echo "📦 Deploying dependencies..."
+          windeployqt.exe --release ComputerAlgebraSystem.exe
+          echo "✅ Dependencies deployed"
+
+      - name: Create portable package
+        run: |
+          echo "📦 Creating portable package..."
+          
+          # Создаем папку для портативной версии
+          mkdir ComputerAlgebraSystem_Portable
+          
+          # Копируем основной бинарник
+          copy ComputerAlgebraSystem.exe ComputerAlgebraSystem_Portable\
+          
+          # Копируем DLL зависимости
+          copy *.dll ComputerAlgebraSystem_Portable\ 2>$null || echo "No DLLs to copy"
+          
+          # Копируем папки с плагинами если они есть
+          if (Test-Path "platforms") { 
+            copy platforms ComputerAlgebraSystem_Portable\ -Recurse 
+            echo "✅ Copied platforms folder"
+          }
+          if (Test-Path "imageformats") { 
+            copy imageformats ComputerAlgebraSystem_Portable\ -Recurse 
+            echo "✅ Copied imageformats folder"
+          }
+          if (Test-Path "styles") { 
+            copy styles ComputerAlgebraSystem_Portable\ -Recurse 
+            echo "✅ Copied styles folder"
+          }
+          
+          # Создаем ZIP архив
+          Compress-Archive -Path ComputerAlgebraSystem_Portable\* -DestinationPath ComputerAlgebraSystem-Windows-Portable.zip -Force
+          
+          echo "✅ Portable package created: ComputerAlgebraSystem-Windows-Portable.zip"
+          dir ComputerAlgebraSystem-Windows-Portable.zip
+
+      - name: Upload portable package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ComputerAlgebraSystem-Windows-Portable.zip
+          path: ComputerAlgebraSystem-Windows-Portable.zip
+          retention-days: 30
+
+      - name: Upload standalone executable
         uses: actions/upload-artifact@v4
         with:
           name: ComputerAlgebraSystem-Windows.exe
           path: ComputerAlgebraSystem.exe
           retention-days: 30
+
+      - name: Show build summary
+        run: |
+          echo ""
+          echo "🎊 BUILD SUCCESSFUL! 🎊"
+          echo "📦 Artifacts uploaded:"
+          echo "   - ComputerAlgebraSystem-Windows-Portable.zip (complete portable package)"
+          echo "   - ComputerAlgebraSystem-Windows.exe (standalone executable)"
+          echo ""
+          echo "🚀 The portable package contains:"
+          echo "   ✅ ComputerAlgebraSystem.exe"
+          echo "   ✅ All required DLL libraries"
+          echo "   ✅ Qt plugins (platforms, imageformats, etc.)"
+          echo "   📝 Ready to run on any Windows computer!"
