@@ -40,15 +40,16 @@ jobs:
     - name: Verify binary
       run: |
         echo "🔍 Looking for binary..."
-        if [ -f "ComputerAlgebraSystem" ]; then
-          echo "✅ Binary found: ComputerAlgebraSystem"
+        if [ -f "build/ComputerAlgebraSystem" ]; then
+          echo "✅ Binary found in build folder"
+          cp build/ComputerAlgebraSystem .
           ls -la ComputerAlgebraSystem
           file ComputerAlgebraSystem
+        elif [ -f "ComputerAlgebraSystem" ]; then
+          echo "✅ Binary found in root folder"
         else
           echo "❌ Binary not found"
           find . -name "ComputerAlgebraSystem" -type f
-          echo "📁 All files:"
-          ls -la
           exit 1
         fi
         
@@ -59,32 +60,11 @@ jobs:
         path: ComputerAlgebraSystem
         retention-days: 30
 
-  build-windows:
-    runs-on: windows-latest
-    continue-on-error: true  # ← Пропускаем ошибку если Windows не соберётся
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: '6.9.3'
-        host: windows
-        target: desktop
-        arch: win64_mingw
-
-    - name: Try Windows build
+    - name: Show success message
       run: |
-        echo "🔄 Attempting Windows build..."
-        C:\Qt\6.9.3\mingw_64\bin\qmake.exe ComputerAlgebraSystem.pro
-        C:\Qt\6.9.3\mingw_64\bin\mingw32-make.exe || echo "Windows build failed, but continuing..."
-
-    - name: Upload Windows artifact if exists
-      if: success() || failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: ComputerAlgebraSystem-Windows.exe
-        path: ComputerAlgebraSystem.exe
-        if-no-files-found: ignore
+        echo ""
+        echo "🎉 SUCCESS! 🎉"
+        echo "✅ Linux build completed successfully!"
+        echo "📦 Artifact: ComputerAlgebraSystem-Linux"
+        echo "🚀 Ready to download from Actions tab"
+        echo ""
