@@ -19,13 +19,13 @@ MainWindow::MainWindow(QWidget *parent)
     m_controller(),
     m_centralWidget(new QWidget(this)),
     m_mainLayout(new QVBoxLayout(m_centralWidget)),
-    m_typeLabel(new QLabel("Выберите тип данных:", this)),
     m_typeComboBox(new QComboBox(this)),
-    m_methodLabel(new QLabel("Выберите метод:", this)),
+    m_typeLabel(new QLabel("Выберите тип данных:", this)),
     m_methodListWidget(new QListWidget(this)),
+    m_methodLabel(new QLabel("Выберите метод:", this)),
     m_executeButton(new QPushButton("Выполнить", this)),
-    m_resultLabel(new QLabel("Результат:", this)),
-    m_resultTextEdit(new QTextEdit(this))
+    m_resultTextEdit(new QTextEdit(this)),
+    m_resultLabel(new QLabel("Результат:", this))
 {
     setupUI();
     setupConnections();
