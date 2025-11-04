@@ -1,4 +1,4 @@
-name: 🔧 Build Windows Installer
+name: 🔧 Build Windows Application
 on:
   pull_request:
   push:
@@ -6,50 +6,39 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows-installer:
+  build-windows:
     runs-on: windows-latest
     steps:
-      - name: Install MinGW (компилятор для Windows)
-        uses: egor-tensin/setup-mingw@v1
-        with:
-          platform: x64
-          version: 11.2.0
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
-      - name: Install Qt
+      - name: Install Qt with MinGW (упрощенная версия)
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.9.3'
           host: windows
           target: desktop
           arch: win64_mingw
-          tools: tools_ifw
-          add-tools-to-path: true
+          cache: true
 
-      - name: Checkout source code
-        uses: actions/checkout@v4
-
-      - name: Setup environment
+      - name: Build application (простой способ)
         run: |
           echo "🔧 Setting up environment..."
-          echo "PATH=$PATH"
-          echo "MINGW_PATH=C:\msys64\mingw64\bin"
-          g++ --version
-          which g++
-
-      - name: Build application (исправленная версия)
-        run: |
+          # Добавляем MinGW в PATH
+          $mingwPath = "C:\Qt\6.9.3\mingw_64\bin"
+          $env:PATH = "$mingwPath;" + $env:PATH
+          
           echo "🏗️ Building application..."
           qmake -version
+          g++ --version
           
-          # Явно указываем путь к компилятору
-          qmake ComputerAlgebraSystem.pro -spec win32-g++ "CONFIG+=release" "QMAKE_CXX=g++"
-          
-          echo "🔨 Running make..."
-          make -j4
+          # Простая сборка
+          qmake ComputerAlgebraSystem.pro
+          mingw32-make -j4
           
           echo "✅ Build completed"
 
-      - name: Verify binary exists
+      - name: Verify binary
         run: |
           if (Test-Path "release\ComputerAlgebraSystem.exe") {
             echo "✅ Binary found in release folder"
@@ -57,7 +46,7 @@ jobs:
           } elseif (Test-Path "ComputerAlgebraSystem.exe") {
             echo "✅ Binary found in root folder"
           } else {
-            echo "❌ Binary not found"
+            echo "❌ Binary not found, searching..."
             Get-ChildItem -Recurse -Include *.exe
             exit 1
           }
@@ -66,21 +55,20 @@ jobs:
         run: |
           windeployqt --release ComputerAlgebraSystem.exe
 
-      - name: Create installer package
+      - name: Create portable package
         run: |
-          mkdir installer_package
-          copy ComputerAlgebraSystem.exe installer_package/
-          copy *.dll installer_package/ 2>$null || echo "No DLLs to copy"
-          if (Test-Path "platforms") { copy platforms installer_package/ -Recurse }
-          if (Test-Path "imageformats") { copy imageformats installer_package/ -Recurse }
-          if (Test-Path "styles") { copy styles installer_package/ -Recurse }
+          mkdir PortableApp
+          copy ComputerAlgebraSystem.exe PortableApp/
+          copy *.dll PortableApp/ 2>$null || echo "No DLLs"
+          if (Test-Path "platforms") { copy platforms PortableApp/ -Recurse }
+          if (Test-Path "imageformats") { copy imageformats PortableApp/ -Recurse }
           
-          Compress-Archive -Path installer_package/* -DestinationPath ComputerAlgebraSystem-Windows-Installer.zip -Force
-          echo "📦 Installer package created"
+          Compress-Archive -Path PortableApp/* -DestinationPath ComputerAlgebraSystem-Windows-Portable.zip -Force
+          echo "📦 Portable package created"
 
-      - name: Upload installer artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ComputerAlgebraSystem-Windows-Installer.zip
-          path: ComputerAlgebraSystem-Windows-Installer.zip
+          name: ComputerAlgebraSystem-Windows-Portable.zip
+          path: ComputerAlgebraSystem-Windows-Portable.zip
           retention-days: 30
