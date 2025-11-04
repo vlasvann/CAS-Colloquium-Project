@@ -14,17 +14,46 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Build with Qt CI Action
-      uses: benlau/qtci@v2
+    - name: Install Qt with MinGW
+      uses: jurplel/install-qt-action@v4
       with:
-        compiler: mingw81_64
-        platform: windows
-        command: |
-          qmake ComputerAlgebraSystem.pro
-          mingw32-make
-      env:
-        QTCI_VERSION: 6.9.3
-        QTCI_ARCH: win64_mingw
+        version: '6.9.3'
+        host: windows
+        target: desktop
+        arch: win64_mingw
+        cache: true
+
+    - name: Setup MinGW environment
+      run: |
+        echo "🔧 Setting up MinGW environment..."
+        
+        # Добавляем MinGW в PATH
+        $mingwPath = "C:\Qt\6.9.3\mingw_64\bin"
+        $env:PATH = "$mingwPath;$env:PATH"
+        
+        # Проверяем что всё доступно
+        echo "Checking tools:"
+        Get-Command qmake.exe -ErrorAction SilentlyContinue
+        Get-Command g++.exe -ErrorAction SilentlyContinue  
+        Get-Command mingw32-make.exe -ErrorAction SilentlyContinue
+        
+        echo "Tool versions:"
+        qmake.exe -version
+        g++.exe --version
+        mingw32-make.exe --version
+
+    - name: Build project
+      run: |
+        echo "🏗️ Building project..."
+        
+        # Переходим в правильную директорию
+        cd $env:GITHUB_WORKSPACE
+        
+        # Сборка
+        qmake.exe ComputerAlgebraSystem.pro
+        mingw32-make.exe
+        
+        echo "✅ Build completed"
 
     - name: Verify binary
       run: |
@@ -36,7 +65,8 @@ jobs:
           echo "✅ Binary found in root folder"
         } else {
           echo "❌ Binary not found"
-          Get-ChildItem -Recurse -Include *.exe
+          echo "Available files:"
+          Get-ChildItem -Recurse | Where-Object { $_.Name -like "*ComputerAlgebraSystem*" }
           exit 1
         }
         
