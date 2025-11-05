@@ -30,7 +30,7 @@ Polynomial::Polynomial() : m_degree(Natural())
 Polynomial::Polynomial(const std::unordered_map<Natural, Rational>& value)
     : m_degree(Natural())
 {
-    for (auto curr = value.begin(); curr <= value.end(); ++curr)
+    for (auto curr = value.begin(); curr != value.end(); ++curr)
     {
         if (curr->second.isZero())
             continue;
@@ -56,7 +56,7 @@ Polynomial::Polynomial(const std::unordered_map<Natural, Rational>& value)
 Polynomial::Polynomial(const std::unordered_map<Natural, Integer>& value)
     : m_degree(0)
 {
-    for (auto curr = value.begin(); curr <= value.end(); ++curr)
+    for (auto curr = value.begin(); curr != value.end(); ++curr)
     {
         if (curr->second.isZero())
             continue;
@@ -64,7 +64,7 @@ Polynomial::Polynomial(const std::unordered_map<Natural, Integer>& value)
         if (curr->first > m_degree)
             m_degree = curr->first;
 
-        m_value[curr->first] = Rational.TRANS_Z_Q(curr->second);
+        m_value[curr->first] = Rational::TRANS_Z_Q(curr->second);
     }
 
     if (!m_degree.NZER_N_B() && m_value.empty())
@@ -83,14 +83,17 @@ Polynomial Polynomial::ADD_PP_P(const Polynomial& other) const {
     auto res = std::unordered_map<Natural, Rational>(m_value.begin(), m_value.end());
 
     for(const auto& [degree, coeff] : other.m_value) {
-        if(!m_value.find(degree) && !coeff.isZero())
-            res[degree] = coeff;
+        if (coeff.isZero())
+            continue;
+
+        if (m_value.find(degree) != m_value.end())
+            res[degree] = res[degree] + coeff;
 
         else
-            res[degree] = res[degree] + coeff;
+            res[degree] = coeff;
     }
 
-    return Polinomial(res);
+    return Polynomial(res);
 }
 
 /**
@@ -105,14 +108,17 @@ Polynomial Polynomial::SUB_PP_P(const Polynomial& other) const {
     auto res = std::unordered_map<Natural, Rational>(m_value.begin(), m_value.end());
 
     for(const auto& [degree, coeff] : other.m_value) {
-        if(!m_value.find(degree) && !coeff.isZero())
-            res[degree] = Rational() - coeff;
+        if (coeff.isZero())
+            continue;
+
+        if (m_value.find(degree) != m_value.end())
+            res[degree] = res[degree] + coeff;
 
         else
-            res[degree] = res[degree] - coeff;
-
+            res[degree] = Rational() - coeff;
     }
-    return Polinomial(res);
+
+    return Polynomial(res);
 }
 
 /**
@@ -125,14 +131,14 @@ Polynomial Polynomial::SUB_PP_P(const Polynomial& other) const {
 
 Polynomial Polynomial::MUL_PQ_P(const Rational& otherCoeff) const {
     if (isZero() || otherCoeff.isZero())
-        return Polinomial();
+        return Polynomial();
 
     auto res = std::unordered_map<Natural, Rational>(m_value.begin(), m_value.end());
 
     for(const auto& [degree, coeff] : m_value)
         res[degree]= coeff.MUL_QQ_Q(otherCoeff);
 
-    return Polinomial(res);
+    return Polynomial(res);
 }
 
 /**
@@ -147,15 +153,12 @@ Polynomial Polynomial::MUL_Pxk_P(Natural otherDeg) const {
     if (isZero())
         return Polynomial();
 
-    auto res = std::unordered_map<Natural, Rational>(m_value.begin(), m_value.end());
+    std::unordered_map<Natural, Rational> res;
 
     for (const auto& [degree, coeff] : m_value)
-    {
         res[degree + otherDeg] = coeff;
-        res.erase(degree);
-    }
  
-    return Polinomial(res);
+    return Polynomial(res);
 }
 
 /**
@@ -196,7 +199,7 @@ Natural Polynomial::DEG_P_N() const {
 
 Rational Polynomial::FAC_P_Q() const {
     if (isZero())
-        throw std::exception("Это нулевой полином, выносить нечего.");
+        throw std::logic_error("Это нулевой полином, выносить нечего.");
 
     auto it = m_value.begin();
     Integer gcf = it->second.getNumerator().ABS_Z_Z();
@@ -257,19 +260,19 @@ Polynomial Polynomial::MUL_PP_P(const Polynomial& other) const {
 
 Polynomial Polynomial::DIV_PP_P(const Polynomial& divisor) const {
     if (divisor.isZero())
-        throw std::invalid_argument("На 0 делить нельзя!");
+        throw std::logic_error("На 0 делить нельзя!");
     
     if (!divisor.DEG_P_N().NZER_N_B())
-        throw std::invalid_argument("Введите полином, а не константу!");
+        throw std::logic_error("Введите полином, а не константу!");
 
-    Polinomial quotient{};
-    Polinomial remainder{ m_value };
+    Polynomial quotient{};
+    Polynomial remainder{ m_value };
 
-    while (remainder.DEG_P_N >= divisor.DEG_P_N())
+    while (remainder.DEG_P_N() >= divisor.DEG_P_N())
     {
         int tempDegree = remainder.DEG_P_N() - divisor.DEG_P_N();
         Rational tempCoeff = remainder.LED_P_Q() / divisor.LED_P_Q();
-        Polinomial temp = Polinomial(unordered_map<Natural, Rational>{{tempDegree, tempCoeff}});
+        Polynomial temp = Polynomial(unordered_map<Natural, Rational>{{tempDegree, tempCoeff}});
         remainder = remainder - divisor.MUL_Pxk_P(tempDegree).MUL_PQ_P(tempCoeff);
         quotient = quotient + temp;
     }
@@ -289,7 +292,7 @@ Polynomial Polynomial::DIV_PP_P(const Polynomial& divisor) const {
 
 Polynomial Polynomial::MOD_PP_P(const Polynomial& divisor) const {
     if (divisor.isZero())
-        throw std::invalid_argument("На 0 делить нельзя!");
+        throw std::logic_error("На 0 делить нельзя!");
 
     Polynomial quotient = DIV_PP_P(divisor);
     return *this - quotient * divisor;
@@ -314,18 +317,18 @@ Polynomial Polynomial::GCF_PP_P(const Polynomial& other) const {
     if (this->DEG_P_N() < other.DEG_P_N())
         return other.GCF_PP_P(*this);
 
-    auto thisPolinomialCopy = Polinomial(m_value);
-    auto otherPolinomialCopy = Polinomial(other.getValue());
-    Polinomial remainder;
+    auto thisPolynomialCopy = Polynomial(m_value);
+    auto otherPolynomialCopy = Polynomial(other.getValue());
+    Polynomial remainder;
 
-    while (otherPolinomialCopy.DEG_P_N() != Natural(0))
+    while (otherPolynomialCopy.DEG_P_N().NZER_N_B())
     {
-        remainder = thisPolinomialCopy % otherPolinomialCopy;
-        thisPolinomialCopy = otherPolinomialCopy;
-        otherPolinomialCopy = remainder;
+        remainder = thisPolynomialCopy % otherPolynomialCopy;
+        thisPolynomialCopy = otherPolynomialCopy;
+        otherPolynomialCopy = remainder;
     }
 
-    return thisPolinomialCopy;
+    return thisPolynomialCopy;
 }
 /**
  * @brief Метод вычисления производной полинома
@@ -339,7 +342,7 @@ Polynomial Polynomial::GCF_PP_P(const Polynomial& other) const {
 
 Polynomial Polynomial::DER_P_P() const {
     if (isZero())
-        throw std::exception("Нет смысла брать производную от нулевого полинома.");
+        throw std::logic_error("Нет смысла брать производную от нулевого полинома.");
 
     unordered_map<Natural, Rational> derivativeValue;
    
@@ -348,10 +351,10 @@ Polynomial Polynomial::DER_P_P() const {
         if (!deg.NZER_N_B())
             continue;
 
-        derivativeValue[deg - Natural(1)] = Rational(Integer(deg), Natural(0)) * coeff;
+        derivativeValue[deg - Natural(1)] = Rational(Integer(deg), Natural(1)) * coeff;
     }
 
-    return Polinomial(derivativeValue);
+    return Polynomial(derivativeValue);
 }
 
 /**
@@ -364,15 +367,15 @@ Polynomial Polynomial::DER_P_P() const {
  */
 
 Polynomial Polynomial::NMR_P_P() const {
-    Polinomial derivative = this->DER_P_P();
+    Polynomial derivative = this->DER_P_P();
 
     if (derivative.isZero())
-        throw std::exception("Данный полином уже с простыми корнями (является полиномом вида ax + b)");
+        throw std::logic_error("Данный полином уже с простыми корнями (является полиномом вида ax + b)");
     
-    Polinomial gcfResult = this->GCF_PP_P(derivative);
+    Polynomial gcfResult = this->GCF_PP_P(derivative);
 
     if (!gcfResult.DEG_P_Q().NZER_N_B())
-        throw std::exception("Данный полином уже с простыми корнями");
+        throw std::logic_error("Данный полином уже с простыми корнями");
 
     return *this / gcfResult;
 }
@@ -381,14 +384,14 @@ Polynomial Polynomial::NMR_P_P() const {
  * @return Строковое представление полинома
  */
 
-std::string Polynomial::toString() const{
+std::string Polynomial::toString() const {
     if (isZero())
         return "0";
 
     std::string result;
     std::vector<Natural> degrees;
     degrees.reserve(m_value.size());
-    
+
     for (auto it = m_value.begin(); it != m_value.end(); ++it)
     {
         Natural deg = it->first;
@@ -396,7 +399,7 @@ std::string Polynomial::toString() const{
     }
 
     std::sort(degrees.begin(), degrees.end(),
-        [](const auto& a, const auto& b) return a.first > b.first);
+        [](const auto& a, const auto& b) { return a > b; });
 
     for (size_t i = 0; i < degrees.size(); ++i)
     {

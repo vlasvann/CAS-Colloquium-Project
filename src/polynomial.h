@@ -5,7 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
-#include <exceptions>
+#include <stdexcept>
 
 /**
  * Developed by Smirnov Nikolay 4382,
