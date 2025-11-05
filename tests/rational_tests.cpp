@@ -1,6 +1,7 @@
+#include "../rational.h"
+
 #include <cassert>
 #include <stdexcept>
-#include "../src/natural.h"
 
 void test_TRANS_Z_Q() {
 
@@ -21,12 +22,26 @@ void test_default_constructor() {
     assert(r.toString() == "0/1");
 }
 
-void test_parameterized_constructor() {
+void test_parameterized_constructor_1() {
     
     Integer num("3");
     Natural den("4");
     Rational r(num, den);
     assert(r.toString() == "3/4");
+}
+
+void test_parameterized_constructor_2() {
+    
+    Integer num("3");
+    Natural den("0");
+    bool exception_thrown = false;
+    try{
+        Rational r(num, den);
+    }
+    catch (const std::invalid_argument& e){
+        exception_thrown = true;
+    }
+    assert(exception_thrown);
 }
 
 void test_string_constructor_1(){
@@ -65,6 +80,13 @@ void test_RED_Q_Q_2() {
     Rational r("4/6");
     Rational reduced = r.RED_Q_Q();
     assert(reduced.toString() == "2/3");
+}
+
+void test_RED_Q_Q_3() {
+
+    Rational r("0/6");
+    Rational reduced = r.RED_Q_Q();
+    assert(reduced.toString() == "0/1");
 }
 
 void test_INT_Q_B_1() {

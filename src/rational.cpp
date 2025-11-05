@@ -2,8 +2,8 @@
 #include <stdexcept>
 
 /*
- * Developed by Smirnov Aleksandr Dmitrievich group 4382
- * and Vyaznikov Nikita 4382
+ * Developed by Smirnov Aleksandr Dmitrievich group 4382,
+ * Vyaznikov Nikita 4382 and Shlei Nikita 4382
  * Rational - реализация класса рациональных чисел
  */
 
@@ -23,7 +23,11 @@ Rational::Rational() : m_numerator(Integer("0")), m_denominator(Natural("1")) {}
  * 
  * Создаёт Rational с заданным числителем и знаменателем
 */
-Rational::Rational(const Integer& num, const Natural& den) : m_numerator(num), m_denominator(den) {}
+Rational::Rational(const Integer& num, const Natural& den) : m_numerator(num), m_denominator(den) {
+    if (this->m_denominator.COM_NN_D(Natural("0")) == 0){
+        throw std::invalid_argument("Ноль в знаменателе рационального числа");
+    }
+}
 
 /**
  * @brief Конструктор класса Rational из строки.
@@ -43,7 +47,7 @@ Rational::Rational(const std::string& number) {
         this->m_numerator = Integer(number.substr(0, slashPos));
         this->m_denominator = Natural(number.substr(slashPos + 1));
         if (this->m_denominator.COM_NN_D(Natural("0")) == 0){
-            throw std::invalid_argument("Zero in denominator of rational number");
+            throw std::invalid_argument("Ноль в знаменателе рационального числа");
         }
     }
 }
@@ -52,12 +56,9 @@ Rational::Rational(const std::string& number) {
  * @brief Метод сокращения дроби
  * @return Rational сокращённая дробь
  * 
- * Находит НОД числителя и знаменателя и делит их на него
+ * Находит НОД числителя и знаменателя и делит их на него.
 */
 Rational Rational::RED_Q_Q() const {
-    if (this->isZero()){
-        return Rational(this->m_numerator, this->m_denominator);
-    }
     Natural abs_num = this->m_numerator.getAbsolute();
     Natural GCF = abs_num.GCF_NN_N(this->m_denominator);
     Integer red_num = this->m_numerator.DIV_ZZ_Z(GCF);
@@ -69,7 +70,7 @@ Rational Rational::RED_Q_Q() const {
  * @brief Метод проверки сокращённого дробного на целое
  * @return true, если можно перевести в целое, иначе - false
  * 
- * Сокращает дробь и проверяет равен ли знаменатель единице
+ * Сокращает дробь и проверяет, равен ли знаменатель единице
 */
 bool Rational::INT_Q_B() const {
     Rational red_q = this->RED_Q_Q();
@@ -100,7 +101,7 @@ Integer Rational::TRANS_Q_Z() const {
     if (red_q.INT_Q_B()){
         return red_q.m_numerator;
     }
-    throw std::runtime_error("Attempt to translate a rational number with a denominator not equal to one to an integer");
+    throw std::runtime_error("Попытка перевести рациональное число со знаменателем, не равным единице, в целое");
 }
 
 /**
@@ -157,7 +158,7 @@ Rational Rational::MUL_QQ_Q(const Rational& other) const {
 */
 Rational Rational::DIV_QQ_Q(const Rational& other) const {
     if(other.isZero()){ // Проверка на деление на ноль
-        throw std::runtime_error("Zero Division!!!");
+        throw std::runtime_error("Деление на ноль!");
     }
 
     int newSign = this->m_numerator.POZ_Z_D() * other.m_numerator.POZ_Z_D();
@@ -180,7 +181,7 @@ std::string Rational::toString() const{
 * @brief Проверка на равенство 0
 * @return true, если 0, иначе - false 
 *
-* Проверяет равен ли числитель 0
+* Проверяет, равен ли числитель 0
 */
 bool Rational::isZero() const {
     return this->m_numerator.isZero(); 

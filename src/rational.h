@@ -25,7 +25,7 @@ public:
     Rational RED_Q_Q() const; ///< Сокращение дроби
     bool INT_Q_B() const; ///< Проверка на целое
     Integer TRANS_Q_Z() const; ///< Перевод рационального числа в целое (если знам. = 1)
-    Rational TRANS_Z_Q(const Integer& integer); ///< Перевод целого числа в рациональное
+    static Rational TRANS_Z_Q(const Integer& integer); ///< Перевод целого числа в рациональное
 
     Rational ADD_QQ_Q(const Rational& other) const; ///< Сумма рациональных чисел
     Rational SUB_QQ_Q(const Rational& other) const; ///< Разность рациональных чисел
