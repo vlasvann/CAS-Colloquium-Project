@@ -29,6 +29,20 @@ public:
 
     Natural GCF_NN_N(const Natural& other) const; // НОД
     Natural LCM_NN_N(const Natural& other) const; // НОК
+
+    std::string toString() const { return ""; }
+
+    Natural operator+(const Natural& other) const { return ADD_NN_N(other); }
+    Natural operator-(const Natural& other) const { return SUB_NN_N(other); }
+    Natural operator*(const Natural& other) const { return MUL_NN_N(other); }
+    Natural operator/(const Natural& other) const { return DIV_NN_N(other); }
+    Natural operator%(const Natural& other) const { return MOD_NN_N(other); }
+    bool operator>(const Natural& other) const { return COM_NN_D(other) == 1; }
+    bool operator<(const Natural& other) const { return COM_NN_D(other) == -1; }
+    bool operator<=(const Natural& other) const { return COM_NN_D(other) <= 0; }
+    bool operator>=(const Natural& other) const { return COM_NN_D(other) >= 0; }
+    bool operator==(const Natural& other) const { return COM_NN_D(other) == 0; }
+    bool operator!=(const Natural& other) const { return COM_NN_D(other) != 0; }
 };
 
 #endif // NATURAL_H

@@ -27,13 +27,25 @@ public:
     Integer DIV_ZZ_Z(const Integer& divisor) const; // Частное от деления
     Integer MOD_ZZ_Z(const Integer& divisor) const; // Остаток от деления
 
-    std::string toString() const; //??
+    std::string toString() const { return ""; } //??
     bool isZero() const { return m_sign == 0; } //??
     bool isPositive() const { return m_sign > 0; } //?
     bool isNegative() const { return m_sign < 0; } //?
 
     Natural getAbsolute() const { return m_absolute; } //??
     int getSign() const { return m_sign; } //?
+
+    Integer operator+(const Integer& other) const { return ADD_ZZ_Z(other); }
+    Integer operator-(const Integer& other) const { return SUB_ZZ_Z(other); }
+    Integer operator*(const Integer& other) const { return MUL_ZZ_Z(other); }
+    Integer operator/(const Integer& other) const { return DIV_ZZ_Z(other); }
+    Integer operator%(const Integer& other) const { return MOD_ZZ_Z(other); }
+    bool operator>(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == 1; }
+    bool operator<(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == -1; }
+    bool operator>=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() >= 0; }
+    bool operator<=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() <= 0; }
+    bool operator==(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == 0; }
+    bool operator!=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() != 0; }
 };
 
 #endif // INTEGER_H
