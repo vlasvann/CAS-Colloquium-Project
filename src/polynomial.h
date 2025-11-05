@@ -3,39 +3,57 @@
 
 #include "rational.h"
 #include <vector>
+#include <unordered_map>
+#include <algorithm>
+#include <exceptions>
+
+/**
+ * Developed by Smirnov Nikolay 4382,
+ * Sozinov Denis 4382,
+ * Isaev Andrei 4382
+ * @class Polynomial
+ * @brief Класс полиномов (многочленов)
+ *
+ * Предоставляет интерфейс полиномов
+ * с соответствующими методами (операциями над полиномами)
+ */
 
 class Polynomial {
 private:
-    int m_degree;
-    std::vector<Rational> m_coefficients;
-
+    Natural m_degree; // старшая степень полинома
+    std::unordered_map<Natural, Rational> m_value; // мономы в составе полинома
 public:
+    //Конструкторы (по умолчанию, с рациональными коэф., с целыми коэф.)
     Polynomial();
-    Polynomial(const std::vector<Rational>& coeffs);
-    Polynomial(const std::vector<Integer>& coeffs);
+    Polynomial(const std::unordered_map<Natural, Rational>&);
+    Polynomial(const std::unordered_map<Natural, Integer>&);
 
-    Polynomial ADD_PP_P(const Polynomial& other) const; // Сложение
-    Polynomial SUB_PP_P(const Polynomial& other) const; // Вычитание
-    Polynomial MUL_PQ_P(const Rational& number) const; // Умножение на рациональное число
-    Polynomial MUL_Pxk_P(int k) const; // Умножение на x^k
+    Polynomial ADD_PP_P(const Polynomial&) const; // Сложение
+    Polynomial SUB_PP_P(const Polynomial&) const; // Вычитание
+    Polynomial MUL_PQ_P(const Rational&) const; // Умножение на рациональное число
+    Polynomial MUL_Pxk_P(Natural) const; // Умножение на x^k
 
     Rational LED_P_Q() const; // Старший коэффициент
     Natural DEG_P_N() const; // Степень многочлена
 
     Rational FAC_P_Q() const; // НОК знаменателей и НОД числителей
-    Polynomial MUL_PP_P(const Polynomial& other) const; // Умножение многочленов
-    Polynomial DIV_PP_P(const Polynomial& divisor) const; // Частное от деления
-    Polynomial MOD_PP_P(const Polynomial& divisor) const; // Остаток от деления
-    Polynomial GCF_PP_P(const Polynomial& other) const; // НОД многочленов
+    Polynomial MUL_PP_P(const Polynomial&) const; // Умножение многочленов
+    Polynomial DIV_PP_P(const Polynomial&) const; // Частное от деления
+    Polynomial MOD_PP_P(const Polynomial&) const; // Остаток от деления
+    Polynomial GCF_PP_P(const Polynomial&) const; // НОД многочленов
     Polynomial DER_P_P() const; // Производная
     Polynomial NMR_P_P() const; // Преобразование кратных корней в простые
+    std::string toString() const; // Представления полинома в строку
 
-    bool isZero() const; //?
-    Rational evaluate(const Rational& x) const; // ?
+    bool isZero() const; // проверка на то, является ли данный многочлен нулевым
+    //Rational evaluate(const Rational& x) const; // вообще залупа непонятная 
+    const std::unordered_map<Natural, Rational>& getValue() const { return m_value; } //Получение пар мономов полинома
 
-    int getDegree() const { return m_degree; } //?
-    const std::vector<Rational>& getCoefficients() const { return m_coefficients; } //?
-    Rational getCoefficient(int index) const; //?
+    Polynomial operator+(const Polynomial& other) const; //Оператор сложения для полиномов
+    Polynomial operator-(const Polynomial& other) const; //Оператор вычитания для полиномов
+    Polynomial operator*(const Polynomial& other) const; //Оператор умножения для полиномов
+    Polynomial operator/(const Polynomial& other) const; //Оператор деления для полиномов
+    Polynomial operator%(const Polynomial& other) const; //Оператор взятия остатка при делении полиномов
 };
 
 #endif // POLYNOMIAL_H
