@@ -42,6 +42,12 @@ public:
     Rational operator-(const Rational& other) const { return SUB_QQ_Q(other); } ///< Оператор разности для рациональных чисел
     Rational operator*(const Rational& other) const { return MUL_QQ_Q(other); } ///< Оператор произведения для рациональных чисел
     Rational operator/(const Rational& other) const { return DIV_QQ_Q(other); } ///< Оператор деления для рациональных чисел
+    bool operator>(const Rational& other) const { return this->SUB_QQ_Q(other).m_numerator.POZ_Z_D() == 1; } ///< Оператор больше для рациональных чисел
+    bool operator<(const Rational& other) const { return this->SUB_QQ_Q(other).m_numerator.POZ_Z_D() == -1; } ///< Оператор меньше для рациональных чисел
+    bool operator>=(const Rational& other) const { return this->SUB_QQ_Q(other).m_numerator.POZ_Z_D() >= 0; } ///< Оператор больше равно для рациональных чисел
+    bool operator<=(const Rational& other) const { return this->SUB_QQ_Q(other).m_numerator.POZ_Z_D() <= 0; } ///< Оператор меньше равно для рациональных чисел
+    bool operator==(const Rational& other) const { return SUB_QQ_Q(other).isZero(); } ///< Оператор равно для рациональных чисел
+    bool operator!=(const Rational& other) const { return SUB_QQ_Q(other).isZero() != true; } ///< Оператор не равно для рациональных чисел
 
 };
 

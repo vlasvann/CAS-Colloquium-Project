@@ -39,6 +39,13 @@ public:
     Integer operator-(const Integer& other) const { return SUB_ZZ_Z(other); }
     Integer operator*(const Integer& other) const { return MUL_ZZ_Z(other); }
     Integer operator/(const Integer& other) const { return DIV_ZZ_Z(other); }
+    Integer operator%(const Integer& other) const { return MOD_ZZ_Z(other); }
+    bool operator>(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == 1; }
+    bool operator<(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == -1; }
+    bool operator>=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() >= 0; }
+    bool operator<=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() <= 0; }
+    bool operator==(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == 0; }
+    bool operator!=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() != 0; }
 };
 
 #endif // INTEGER_H

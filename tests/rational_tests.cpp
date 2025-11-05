@@ -152,8 +152,8 @@ void test_isZero_3() {
     assert(r.isZero() == false);
 }
 
-void test_ADD_QQ_Q_1()
-{
+void test_ADD_QQ_Q_1(){
+
     Rational a1(Integer("5"), Natural("7"));
     Rational a2(Integer("1"), Natural("2"));
 
@@ -162,8 +162,8 @@ void test_ADD_QQ_Q_1()
     assert(ans.getDenominator().COM_NN_D(Natural("14")));
 }
 
-void test_ADD_QQ_Q_2()
-{
+void test_ADD_QQ_Q_2(){
+
     Rational a1(Integer("1"), Natural("18"));
     Rational a2(Integer("5"), Natural("2"));
 
@@ -172,8 +172,8 @@ void test_ADD_QQ_Q_2()
     assert(ans.getDenominator().COM_NN_D(Natural("18")));
 }
 
-void test_SUB_QQ_Q_1()
-{
+void test_SUB_QQ_Q_1(){
+
     Rational a1(Integer("5"), Natural("7"));
     Rational a2(Integer("1"), Natural("2"));
 
@@ -182,8 +182,8 @@ void test_SUB_QQ_Q_1()
     assert(ans.getDenominator().COM_NN_D(Natural("14")));
 }
 
-void test_SUB_QQ_Q_2()
-{
+void test_SUB_QQ_Q_2(){
+
     Rational a1(Integer("1"), Natural("18"));
     Rational a2(Integer("5"), Natural("2"));
 
@@ -192,8 +192,8 @@ void test_SUB_QQ_Q_2()
     assert(ans.getDenominator().COM_NN_D(Natural("18")));
 }
 
-void test_MUL_QQ_Q_1()
-{
+void test_MUL_QQ_Q_1(){
+
     Rational a1(Integer("5"), Natural("7"));
     Rational a2(Integer("3"), Natural("2"));
 
@@ -202,8 +202,8 @@ void test_MUL_QQ_Q_1()
     assert(ans.getDenominator().COM_NN_D(Natural("14")));
 }
 
-void test_MUL_QQ_Q_2()
-{
+void test_MUL_QQ_Q_2(){
+
     Rational a1(Integer("-1"), Natural("18"));
     Rational a2(Integer("5"), Natural("2"));
 
@@ -212,8 +212,8 @@ void test_MUL_QQ_Q_2()
     assert(ans.getDenominator().COM_NN_D(Natural("36")));
 }
 
-void test_DIV_QQ_Q_1()
-{
+void test_DIV_QQ_Q_1(){
+
     Rational a1(Integer("5"), Natural("7"));
     Rational a2(Integer("3"), Natural("2"));
 
@@ -222,8 +222,8 @@ void test_DIV_QQ_Q_1()
     assert(ans.getDenominator().COM_NN_D(Natural("21")));
 }
 
-void test_DIV_QQ_Q_2()
-{
+void test_DIV_QQ_Q_2(){
+
     Rational a1(Integer("1"), Natural("18"));
     Rational a2(Integer("-5"), Natural("2"));
 
@@ -232,8 +232,8 @@ void test_DIV_QQ_Q_2()
     assert(ans.getDenominator().COM_NN_D(Natural("45")));
 }
 
-void test_DIV_QQ_Q_3()
-{
+void test_DIV_QQ_Q_3(){
+
     Rational a1(Integer("1"), Natural("18"));
     Rational a2(Integer("0"), Natural("2"));
 
@@ -248,4 +248,46 @@ void test_DIV_QQ_Q_3()
         isExeptionThrown = true;
     }
     assert(isExeptionThrown);
+}
+
+void test_bigger(){
+
+    Rational r1 = Rational("1/2");
+    Rational r2 = Rational("1/4");
+    assert(r1 > r2);
+}
+
+void test_smaller(){
+
+    Rational r1 = Rational("1/2");
+    Rational r2 = Rational("1/4");
+    assert(r2 < r1);
+}
+
+void test_smaller_equal(){
+
+    Rational r1 = Rational("1/2");
+    Rational r2 = Rational("1/4");
+    assert(r2 <= r1);
+}
+
+void test_bigger_equal(){
+
+    Rational r1 = Rational("1/2");
+    Rational r2 = Rational("1/4");
+    assert(r1 >= r2);
+}
+
+void test_equal(){
+
+    Rational r1 = Rational("1/2");
+    Rational r2 = Rational("1/2");
+    assert(r1 == r2);
+}
+
+void test_not_equal(){
+
+    Rational r1 = Rational("1/4");
+    Rational r2 = Rational("1/2");
+    assert(r1 != r2);
 }

@@ -36,6 +36,13 @@ public:
     Natural operator-(const Natural& other) const { return SUB_NN_N(other); }
     Natural operator*(const Natural& other) const { return MUL_NN_N(other); }
     Natural operator/(const Natural& other) const { return DIV_NN_N(other); }
+    Natural operator%(const Natural& other) const { return MOD_NN_N(other); }
+    bool operator>(const Natural& other) const { return COM_NN_D(other) == 1; }
+    bool operator<(const Natural& other) const { return COM_NN_D(other) == -1; }
+    bool operator<=(const Natural& other) const { return COM_NN_D(other) <= 0; }
+    bool operator>=(const Natural& other) const { return COM_NN_D(other) >= 0; }
+    bool operator==(const Natural& other) const { return COM_NN_D(other) == 0; }
+    bool operator!=(const Natural& other) const { return COM_NN_D(other) != 0; }
 };
 
 #endif // NATURAL_H

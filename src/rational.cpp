@@ -24,7 +24,7 @@ Rational::Rational() : m_numerator(Integer("0")), m_denominator(Natural("1")) {}
  * Создаёт Rational с заданным числителем и знаменателем
 */
 Rational::Rational(const Integer& num, const Natural& den) : m_numerator(num), m_denominator(den) {
-    if (this->m_denominator.COM_NN_D(Natural("0")) == 0){
+    if (this->m_denominator == Natural("0")){
         throw std::invalid_argument("Ноль в знаменателе рационального числа");
     }
 }
@@ -46,7 +46,7 @@ Rational::Rational(const std::string& number) {
     else{
         this->m_numerator = Integer(number.substr(0, slashPos));
         this->m_denominator = Natural(number.substr(slashPos + 1));
-        if (this->m_denominator.COM_NN_D(Natural("0")) == 0){
+        if (this->m_denominator == Natural("0")){
             throw std::invalid_argument("Ноль в знаменателе рационального числа");
         }
     }
@@ -61,8 +61,8 @@ Rational::Rational(const std::string& number) {
 Rational Rational::RED_Q_Q() const {
     Natural abs_num = this->m_numerator.getAbsolute();
     Natural GCF = abs_num.GCF_NN_N(this->m_denominator);
-    Integer red_num = this->m_numerator.DIV_ZZ_Z(GCF);
-    Natural red_den = this->m_denominator.DIV_NN_N(GCF);
+    Integer red_num = this->m_numerator / GCF;
+    Natural red_den = this->m_denominator / GCF;
     return Rational(red_num, red_den);
 }
 
@@ -75,7 +75,7 @@ Rational Rational::RED_Q_Q() const {
 bool Rational::INT_Q_B() const {
     Rational red_q = this->RED_Q_Q();
     Natural red_den = red_q.getDenominator();
-    return (red_den.COM_NN_D(Natural("1")) == 0);
+    return (red_den == Natural("1"));
 }
 
 /**
@@ -115,7 +115,7 @@ Integer Rational::TRANS_Q_Z() const {
 */
 Rational Rational::ADD_QQ_Q(const Rational& other) const {
     Natural newDen = this->m_denominator.LCM_NN_N(other.m_denominator);
-    Integer newNum = this->m_numerator*newDen.DIV_NN_N(this->m_denominator) + other.m_numerator*newDen.DIV_NN_N(other.m_denominator);
+    Integer newNum = this->m_numerator * (newDen / this->m_denominator) + other.m_numerator * (newDen / other.m_denominator);
     return Rational(newNum, newDen).RED_Q_Q();
 }
 
@@ -130,7 +130,7 @@ Rational Rational::ADD_QQ_Q(const Rational& other) const {
 */
 Rational Rational::SUB_QQ_Q(const Rational& other) const {
     Natural newDen = this->m_denominator.LCM_NN_N(other.m_denominator);
-    Integer newNum = this->m_numerator*newDen.DIV_NN_N(this->m_denominator) - other.m_numerator*newDen.DIV_NN_N(other.m_denominator);
+    Integer newNum = this->m_numerator * (newDen / this->m_denominator) - other.m_numerator * (newDen / other.m_denominator);
     return Rational(newNum, newDen).RED_Q_Q();
 }
 
