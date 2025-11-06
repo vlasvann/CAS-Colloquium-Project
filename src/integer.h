@@ -8,211 +8,49 @@
 /**
  * Developed by Buraya Vera and Pisarenko Aleksandra group 4382
  * @class Integer
- * @brief Реализация целых чисел с поддержкой основных арифметических операций
+ * @brief Класс целых чисел
  *
- * Представляет целые числа со знаком и абсолютным значением. Поддерживает все основные
- * арифметические операции включая сложение, вычитание, умножение, деление и взятие остатка.
- * Обеспечивает преобразование в/из натуральных чисел и строковое представление.
+ * Представляет целые числа со знаком и абсолютным значением.
+ * Поддерживает основные арифметические операции и преобразования между типами.
  */
-class Integer
-{
+class Integer {
 private:
-    Natural m_absolute; ///< Абсолютное значение целого числа
-    int m_sign;         ///< Знак целого числа (0 - положительное, 1 - отрицательное)
+    Natural m_absolute;  ///< Абсолютное значение целого числа
+    int m_sign;          ///< Знак целого числа (0 - положительное, 1 - отрицательное)
 
 public:
-    /**
-     * @brief Конструктор по умолчанию
-     * @return Целое число со значением ноль
-     *
-     * Создает целое число со значением ноль. Знак устанавливается в 0,
-     * абсолютное значение инициализируется как натуральный ноль.
-     */
-    Integer();
+    Integer(); ///< Конструктор по умолчанию
+    Integer(const Natural& nat); ///< Конструктор из натурального числа
+    Integer(const Natural& abs, int sgn); ///< Конструктор с явным указанием знака
+    Integer(const std::string& str); ///< Конструктор из строкового представления
 
-    /**
-     * @brief Конструктор из натурального числа
-     * @param nat Натуральное число для преобразования
-     * @return Положительное целое число
-     *
-     * Создает положительное целое число на основе переданного натурального числа.
-     * Знак автоматически устанавливается в 0 (положительное число).
-     */
-    Integer(const Natural &nat);
+    Natural ABS_Z_N() const; ///< Получение абсолютного значения
+    int POZ_Z_D() const; ///< Определение знака числа
+    Integer MUL_ZM_Z() const; ///< Умножение числа на -1
+    Integer TRANS_N_Z(const Natural& natural); ///< Преобразование натурального числа в целое
+    Natural TRANS_Z_N() const; ///< Преобразование целого числа в натуральное
+    Integer ADD_ZZ_Z(const Integer& other) const; ///< Сложение двух целых чисел
+    Integer SUB_ZZ_Z(const Integer& other) const; ///< Вычитание целых чисел
+    Integer MUL_ZZ_Z(const Integer& other) const; ///< Умножение целых чисел
+    Integer DIV_ZZ_Z(const Integer& divisor) const; ///< Целочисленное деление
+    Integer MOD_ZZ_Z(const Integer& divisor) const; ///< Остаток от деления
+    std::string toString() const; ///< Строковое представление числа
 
-    /**
-     * @brief Конструктор с явным указанием знака
-     * @param abs Абсолютное значение числа
-     * @param sgn Знак числа (0 - положительное, 1 - отрицательное)
-     * @return Целое число с заданными параметрами
-     *
-     * Позволяет создать целое число с заданным абсолютным значением и знаком.
-     * Гарантирует корректное представление нуля (знак всегда 0 для нуля).
-     */
-    Integer(const Natural &abs, int sgn);
+    int getSign() const { return m_sign; } ///< Получение знака числа
 
-    /**
-     * @brief Конструктор из строкового представления
-     * @param str Строковое представление целого числа
-     * @return Целое число, соответствующее строке
-     *
-     * Парсит строку в целое число. Поддерживает положительные числа без знака,
-     * отрицательные числа с префиксом '-' и ноль. Выполняет базовую валидацию
-     * формата входной строки.
-     */
-    Integer(const std::string &str);
+    Integer operator=(const Integer& other) const { return ADD_ZZ_Z(other); } ///< Оператор присваивания для целых чисел
+    Integer operator+(const Integer& other) const { return ADD_ZZ_Z(other); } ///< Оператор сложения для целых чисел
+    Integer operator-(const Integer& other) const { return SUB_ZZ_Z(other); } ///< Оператор вычитания для целых чисел
+    Integer operator*(const Integer& other) const { return MUL_ZZ_Z(other); } ///< Оператор умножения для целых чисел
+    Integer operator/(const Integer& other) const { return DIV_ZZ_Z(other); } ///< Оператор деления для целых чисел
+    Integer operator%(const Integer& other) const { return MOD_ZZ_Z(other); } ///< Оператор взятия остатка для целых чисел
 
-    /**
-     * @brief Получение абсолютного значения
-     * @return Натуральное число - модуль целого числа
-     *
-     * Возвращает абсолютное значение целого числа как натуральное число.
-     * Для нуля возвращает натуральный ноль, для положительных и отрицательных
-     * чисел - соответствующее натуральное значение.
-     */
-    Natural ABS_Z_N() const;
-
-    /**
-     * @brief Определение знака числа
-     * @return Целое число: 0 - ноль, 1 - положительное, -1 - отрицательное
-     *
-     * Анализирует знак и значение числа. Проверяет является ли число нулем,
-     * положительным или отрицательным. Корректно обрабатывает пограничные случаи.
-     */
-    int POZ_Z_D() const;
-
-    /**
-     * @brief Умножение числа на -1
-     * @return Новое целое число с противоположным знаком
-     *
-     * Изменяет знак числа на противоположный. Для нуля возвращает ноль,
-     * для положительных чисел - отрицательные, для отрицательных - положительные.
-     * Сохраняет абсолютное значение неизменным.
-     */
-    Integer MUL_ZM_Z() const;
-
-    /**
-     * @brief Преобразование натурального числа в целое
-     * @param natural Натуральное число для преобразования
-     * @return Целое число с тем же абсолютным значением
-     *
-     * Выполняет преобразование натурального числа в целое. Результирующее
-     * число всегда положительное с нулевым знаком.
-     */
-    Integer TRANS_N_Z(const Natural &natural);
-
-    /**
-     * @brief Преобразование целого числа в натуральное
-     * @return Натуральное число - абсолютное значение
-     * @throws std::invalid_argument если число отрицательное или ноль
-     *
-     * Преобразует положительное целое число в натуральное. Выбрасывает исключение
-     * для отрицательных чисел и нуля, так как они не являются натуральными.
-     */
-    Natural TRANS_Z_N() const;
-
-    /**
-     * @brief Сложение двух целых чисел
-     * @param other Второе слагаемое
-     * @return Результат сложения
-     *
-     * Выполняет арифметическое сложение двух целых чисел. Корректно обрабатывает
-     * все комбинации знаков: положительные, отрицательные и нулевые значения.
-     * Использует алгоритмы сложения и вычитания натуральных чисел.
-     */
-    Integer ADD_ZZ_Z(const Integer &other) const;
-
-    /**
-     * @brief Вычитание целых чисел
-     * @param other Вычитаемое
-     * @return Результат вычитания
-     *
-     * Реализует арифметическое вычитание через сложение с противоположным числом.
-     * Преобразует операцию вычитания в операцию сложения с инвертированным знаком.
-     */
-    Integer SUB_ZZ_Z(const Integer &other) const;
-
-    /**
-     * @brief Умножение целых чисел
-     * @param other Второй множитель
-     * @return Результат умножения
-     *
-     * Выполняет арифметическое умножение двух целых чисел. Учитывает правила знаков:
-     * одинаковые знаки дают положительный результат, разные - отрицательный.
-     * Ноль в любом множителе дает нулевой результат.
-     */
-    Integer MUL_ZZ_Z(const Integer &other) const;
-
-    /**
-     * @brief Целочисленное деление
-     * @param divisor Делитель
-     * @return Результат деления
-     * @throws std::invalid_argument при делении на ноль
-     *
-     * Реализует целочисленное деление с учетом знаков. Для отрицательных чисел
-     * применяет правила математического целочисленного деления. Корректно
-     * обрабатывает деление меньшего числа на большее.
-     */
-    Integer DIV_ZZ_Z(const Integer &divisor) const;
-
-    /**
-     * @brief Остаток от деления
-     * @param divisor Делитель
-     * @return Остаток от деления
-     * @throws std::invalid_argument при делении на ноль
-     *
-     * Вычисляет остаток от целочисленного деления. Использует формулу:
-     * remainder = dividend - (dividend / divisor) * divisor
-     * Гарантирует корректное поведение для отрицательных чисел.
-     */
-    Integer MOD_ZZ_Z(const Integer &divisor) const;
-
-    /**
-     * @brief Строковое представление числа
-     * @return Строка, представляющая число
-     *
-     * Преобразует целое число в строковое представление. Для положительных чисел
-     * возвращает строку без знака, для отрицательных - с префиксом '-',
-     * для нуля возвращает "0".
-     */
-    std::string toString() const;
-
-    /**
-     * @brief Оператор сложения
-     * @param other Второе слагаемое
-     * @return Результат сложения
-     */
-    Integer operator+(const Integer &other) const { return ADD_ZZ_Z(other); }
-
-    /**
-     * @brief Оператор вычитания
-     * @param other Вычитаемое
-     * @return Результат вычитания
-     */
-    Integer operator-(const Integer &other) const { return SUB_ZZ_Z(other); }
-
-    /**
-     * @brief Оператор умножения
-     * @param other Второй множитель
-     * @return Результат умножения
-     */
-    Integer operator*(const Integer &other) const { return MUL_ZZ_Z(other); }
-
-    /**
-     * @brief Оператор деления
-     * @param other Делитель
-     * @return Результат деления
-     */
-    
-    Integer operator/(const Integer &other) const { return DIV_ZZ_Z(other); }
-    Integer operator%(const Integer& other) const { return MOD_ZZ_Z(other); }
-  
-    bool operator>(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == 1; }
-    bool operator<(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == -1; }
-    bool operator>=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() >= 0; }
-    bool operator<=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() <= 0; }
-    bool operator==(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == 0; }
-    bool operator!=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() != 0; }
+    bool operator>(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == 1; } ///< Оператор больше для целых чисел
+    bool operator<(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == -1; } ///< Оператор меньше для целых чисел
+    bool operator>=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() >= 0; } ///< Оператор больше или равно для целых чисел
+    bool operator<=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() <= 0; } ///< Оператор меньше или равно для целых чисел
+    bool operator==(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() == 0; } ///< Оператор равенства для целых чисел
+    bool operator!=(const Integer& other) const { return (this->SUB_ZZ_Z(other)).POZ_Z_D() != 0; } ///< Оператор неравенства для целых чисел
 };
 
 #endif // INTEGER_H
