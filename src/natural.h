@@ -11,6 +11,7 @@ private:
 public:
     Natural();
     Natural(const std::string& number);
+    Natural(int digit);
     Natural(const std::vector<int>& digits);
 
     int COM_NN_D(const Natural& other) const; //сравнение

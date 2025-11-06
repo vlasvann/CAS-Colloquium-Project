@@ -4,6 +4,8 @@ Natural::Natural() {}
 
 Natural::Natural(const std::string&) {}
 
+Natural::Natural(int) {}
+
 Natural::Natural(const std::vector<int>&) {
 	m_digits.push_back(0);
 }

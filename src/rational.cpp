@@ -59,7 +59,7 @@ Rational::Rational(const std::string& number) {
  * Находит НОД числителя и знаменателя и делит их на него.
 */
 Rational Rational::RED_Q_Q() const {
-    Natural abs_num = this->m_numerator.getAbsolute();
+    Natural abs_num = this->m_numerator.ABS_Z_N();
     Natural GCF = abs_num.GCF_NN_N(this->m_denominator);
     Integer red_num = this->m_numerator / GCF;
     Natural red_den = this->m_denominator / GCF;
@@ -162,8 +162,8 @@ Rational Rational::DIV_QQ_Q(const Rational& other) const {
     }
 
     int newSign = this->m_numerator.POZ_Z_D() * other.m_numerator.POZ_Z_D();
-    Integer newNum = Integer(this->m_numerator.getAbsolute() * other.m_denominator, newSign);
-    Natural newDenum = this->m_denominator * other.m_numerator.getAbsolute();
+    Integer newNum = Integer(this->m_numerator.ABS_Z_N() * other.m_denominator, newSign);
+    Natural newDenum = this->m_denominator * other.m_numerator.ABS_Z_N();
 
     return Rational(newNum, newDenum).RED_Q_Q();
 }
