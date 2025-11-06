@@ -14,7 +14,7 @@ public:
     Integer(const Natural& abs, int sgn);          // из абсолютной величины и знака
     Integer(const std::string&);            // из строки
 
-    Integer ABS_Z_Z() const;                       // Абсолютная величина
+    Natural ABS_Z_N() const;                       // Абсолютная величина
     int POZ_Z_D() const;                           // Знак: -1, 0, 1
     Integer MUL_ZM_Z() const;                      // Умножение на (-1)
 
