@@ -2,7 +2,6 @@
 #define POLYNOMIAL_H
 
 #include "rational.h"
-#include <vector>
 #include <unordered_map>
 #include <algorithm>
 #include <stdexcept>
@@ -20,13 +19,13 @@
 
 class Polynomial {
 private:
-    Natural m_degree; // старшая степень полинома
-    std::unordered_map<Natural, Rational> m_value; // мономы в составе полинома
+    int m_degree; // старшая степень полинома
+    std::unordered_map<int, Rational> m_value; // мономы в составе полинома
 public:
     //Конструкторы (по умолчанию, с рациональными коэф., с целыми коэф.)
     Polynomial();
-    Polynomial(const std::unordered_map<Natural, Rational>&);
-    Polynomial(const std::unordered_map<Natural, Integer>&);
+    Polynomial(const std::unordered_map<int, Rational>&);
+    Polynomial(const std::unordered_map<int, Integer>&);
 
     Polynomial ADD_PP_P(const Polynomial&) const; // Сложение
     Polynomial SUB_PP_P(const Polynomial&) const; // Вычитание
@@ -46,8 +45,7 @@ public:
     std::string toString() const; // Представления полинома в строку
 
     bool isZero() const; // проверка на то, является ли данный многочлен нулевым
-    //Rational evaluate(const Rational& x) const; // вообще залупа непонятная 
-    const std::unordered_map<Natural, Rational>& getValue() const { return m_value; } //Получение пар мономов полинома
+    const std::unordered_map<int, Rational>& getValue() const { return m_value; } //Получение пар мономов полинома
 
     Polynomial operator+(const Polynomial& other) const; //Оператор сложения для полиномов
     Polynomial operator-(const Polynomial& other) const; //Оператор вычитания для полиномов
