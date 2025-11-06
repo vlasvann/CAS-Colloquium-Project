@@ -1,4 +1,4 @@
-#include "Natural.h"
+#include "natural.h"
 #include <iostream>
 #include <cassert>
 
