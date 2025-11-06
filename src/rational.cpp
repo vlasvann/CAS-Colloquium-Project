@@ -184,5 +184,5 @@ std::string Rational::toString() const{
 * Проверяет, равен ли числитель 0
 */
 bool Rational::isZero() const {
-    return this->m_numerator.isZero(); 
+    return this->m_numerator.POZ_Z_D() == 0; 
 }
