@@ -408,7 +408,7 @@ std::string Polynomial::toString() const {
         const Rational& coef = m_value.find(deg)->second;
         std::string coefStr = coef.toString();
 
-        if (coefStr[0] != "-" && i > 0)
+        if (coefStr[0] != '-' && i > 0)
             result += "+";
 
         result += deg == 0 ? coefStr : coefStr != "1" ? coefStr + "x^" + std::to_string(deg) : "x^" + std::to_string(deg);
