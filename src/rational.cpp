@@ -59,7 +59,7 @@ Rational::Rational(const std::string& number) {
  * Находит НОД числителя и знаменателя и делит их на него.
 */
 Rational Rational::RED_Q_Q() const {
-    Natural abs_num = this->m_numerator.getAbsolute();
+    Natural abs_num = this->m_numerator.ABS_Z_N();
     Natural GCF = abs_num.GCF_NN_N(this->m_denominator);
     Integer red_num = this->m_numerator / GCF;
     Natural red_den = this->m_denominator / GCF;
@@ -183,5 +183,5 @@ std::string Rational::toString() const{
 * Проверяет, равен ли числитель 0
 */
 bool Rational::isZero() const {
-    return this->m_numerator.isZero(); 
+    return this->m_numerator.POZ_Z_D() == 0; 
 }

@@ -8,8 +8,8 @@ Integer::Integer(const Natural& abs, int sgn) : m_absolute(abs), m_sign(sgn) {}
 
 Integer::Integer(const std::string&) : m_sign(0) {}
 
-Integer Integer::ABS_Z_Z() const {
-    return Integer(); // временная заглушка
+Natural Integer::ABS_Z_N() const {
+    return Natural(); // временная заглушка
 }
 
 int Integer::POZ_Z_D() const {
