@@ -225,7 +225,7 @@ std::string Controller::executeIntegerOperation(const std::string& method, const
     if(method == "ABS_Z_Z"){
         if(inputs.size() < 1) throw std::invalid_argument("Вы ввели слишком мало операндов!");
         Integer a = m_parser.parseInteger(inputs[0]);
-        Integer result = a.ABS_Z_Z();
+        Integer result = a.ABS_Z_N();
         return m_parser.toString(result);
     }
     else if(method == "ADD_ZZ_Z"){
