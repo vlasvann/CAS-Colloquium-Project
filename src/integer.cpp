@@ -143,55 +143,37 @@ Natural Integer::TRANS_Z_N() const {
  * Использует алгоритмы сложения и вычитания натуральных чисел.
  */
 Integer Integer::ADD_ZZ_Z(const Integer& other) const {
-    int sign1 = this->m_sign;
-    int sign2 = other.m_sign;
+    int pos1 = this->POZ_Z_D();
+    int pos2 = other.POZ_Z_D();
+
+    if (pos1 == 0) return other;
+    if (pos2 == 0) return *this;
 
     Natural abs1 = this->ABS_Z_N();
     Natural abs2 = other.ABS_Z_N();
 
-    if(abs1 == Natural(0) && abs2 == Natural(0)){
-        return Integer();
-    }
-
-    if(abs1 == Natural(0)){
-        return other;
-    }
-
-    if(abs2 == Natural(0)){
-        return *this;
-    }
-    
-    // Обработка сложения чисел с одинаковыми знаками
-    if(sign1 == sign2){
+    if (pos1 == pos2) {
         Natural sum = abs1 + abs2;
-        if(sign1 == 1){
-            return Integer(sum, 1);
+        if (pos1 == 1) {
+            return Integer(sum).MUL_ZM_Z();
         }
         return Integer(sum);
     }
-    // Обработка сложения чисел с разными знаками
-    else{
-        if(abs1 > abs2){
-            Natural difference = abs1 - abs2;
-            if(sign1 == 0){
-                return Integer(difference);
-            }
-            else{
-                Integer s = Integer(difference);
-                return s.MUL_ZM_Z();
-            }
-        }else if(abs1 < abs2){
-            Natural difference = abs2 - abs1;
-            if(sign2 == 0){
-                return Integer(difference);
-            }
-            else{
-                Integer s = Integer(difference);
-                return s.MUL_ZM_Z();
-            }
-        }else{
-            return Integer();
+
+    if (abs1 > abs2) {
+        Natural diff = abs1 - abs2;
+        if (pos1 == 1) {
+            return Integer(diff).MUL_ZM_Z();
         }
+        return Integer(diff);
+    } else if (abs2 > abs1) {
+        Natural diff = abs2 - abs1;
+        if (pos2 == 1) {
+            return Integer(diff).MUL_ZM_Z();
+        }
+        return Integer(diff);
+    } else {
+        return Integer();
     }
 }
 
@@ -215,7 +197,7 @@ Integer Integer::SUB_ZZ_Z(const Integer& other) const {
     Natural abs1 = this->ABS_Z_N();
     Natural abs2 = other.ABS_Z_N();
     
-    if (abs1 == Natural(0) && abs2 == Natural(0)) {
+    if ((abs1 == Natural(0)) && (abs2 == Natural(0))) {
         return Integer();
     }
     
@@ -270,24 +252,21 @@ Integer Integer::SUB_ZZ_Z(const Integer& other) const {
  * Ноль в любом множителе дает нулевой результат.
  */
 Integer Integer::MUL_ZZ_Z(const Integer& other) const {
-    
     Natural abs1 = this->ABS_Z_N();
     Natural abs2 = other.ABS_Z_N();
-    
+
     if (abs1 == Natural(0) || abs2 == Natural(0)) {
         return Integer();
     }
-    
+
     Natural product = abs1 * abs2;
-    
-    int resultSign;
-    if (this->POZ_Z_D() * other.POZ_Z_D() > 0) {
-        resultSign = 0;
-    } else {
-        resultSign = 1;
+    Integer result(product);
+
+    if (this->POZ_Z_D() * other.POZ_Z_D() < 0) {
+        return result.MUL_ZM_Z();
     }
-    
-    return Integer(product, resultSign);
+
+    return result;
 }
 
 /**
@@ -301,56 +280,51 @@ Integer Integer::MUL_ZZ_Z(const Integer& other) const {
  * обрабатывает деление меньшего числа на большее.
  */
 Integer Integer::DIV_ZZ_Z(const Integer& divisor) const {
-    // Проверка деления на ноль
-    if (divisor == Integer()) {
+    if (divisor.POZ_Z_D() == 0) {
         throw std::invalid_argument("Деление на ноль");
     }
-    
-    // Если делимое равно нулю, результат всегда ноль
-    if (m_absolute == Natural(0)) {
+
+    int dividendSign = this->POZ_Z_D();
+    int divisorSign = divisor.POZ_Z_D();
+
+    if (dividendSign == 0) {
         return Integer();
     }
-    
-    Natural absDividend = this->ABS_Z_N();
-    Natural absDivisor = divisor.ABS_Z_N();
-    
-    // Обработка случая, когда делимое по модулю меньше делителя
-    if (absDividend < absDivisor) {
-        // Положительное делимое / положительный делитель = 0 (например: 2/3 = 0)
-        if (*this >= Integer()) {
-            return Integer();
-        } else {
-            // Отрицательное делимое / положительный делитель = -1 (например: -2/3 = -1)
-            if (divisor > Integer()) {
-                return Integer(Natural(1), 1);
-            } else {
-                // Отрицательное делимое / отрицательный делитель = 0 (например: -2/-3 = 0)
-                return Integer();
-            }
-        }
-    }
-    
-    // Вычисление частного от деления абсолютных значений
-    Natural quotientAbs = absDividend / absDivisor;
-    
-    // Определение знака результата: одинаковые знаки -> положительный, разные -> отрицательный
-    int quotientSign;
-    if (this->m_sign == divisor.m_sign) {
-        quotientSign = 0;
-    } else {
-        quotientSign = 1;
+
+    Natural dividendAbs = this->ABS_Z_N();
+    Natural divisorAbs = divisor.ABS_Z_N();
+    Natural quotientAbs = dividendAbs.DIV_NN_N(divisorAbs);
+    bool isExactDivision = (dividendAbs % divisorAbs == Natural(0));
+
+    // Оба числа положительные
+    if (dividendSign > 0 && divisorSign > 0) {
+        return Integer(quotientAbs);
     }
 
-    // Корректировка для математического целочисленного деления с отрицательными числами:
-    // При разных знаках и наличии ненулевого остатка увеличиваем частное на 1
-    // Это обеспечивает выполнение математического определения: dividend = quotient * divisor + remainder
-    // где remainder имеет тот же знак, что и divisor
-    // Пример: -7/3 = -3 (а не -2), так как -7 = -3*3 + 2
-    if (quotientSign == 1 && (absDividend % absDivisor) != Natural(0)) {
-        quotientAbs = quotientAbs.ADD_1N_N();
+    // Делимое положительное, делитель отрицательный
+    if (dividendSign > 0 && divisorSign < 0) {
+        return Integer(quotientAbs, 1);
     }
-    
-    return Integer(quotientAbs, quotientSign);
+
+    // Делимое отрицательное, делитель положительный
+    if (dividendSign < 0 && divisorSign > 0) {
+        if (isExactDivision) {
+            return Integer(quotientAbs, 1);
+        } else {
+            return Integer(quotientAbs.ADD_1N_N(), 1);
+        }
+    }
+
+    // Оба числа отрицательные
+    if (dividendSign < 0 && divisorSign < 0) {
+        if (isExactDivision) {
+            return Integer(quotientAbs);
+        } else {
+            return Integer(quotientAbs.ADD_1N_N());
+        }
+    }
+
+    return Integer();
 }
 
 /**
@@ -367,30 +341,12 @@ Integer Integer::MOD_ZZ_Z(const Integer& divisor) const {
     if (divisor == Integer()) {
         throw std::invalid_argument("Деление на ноль");
     }
-    
     if (*this == Integer()) {
         return Integer();
     }
-
-    Natural absDividend = this->ABS_Z_N();
-    Natural absDivisor = divisor.ABS_Z_N();
-    
-    Natural remainderAbs = absDividend % absDivisor;
-    
-    if (remainderAbs == Natural(0)) {
-        return Integer();
-    }
-    
-    if (*this >= Integer()) {
-        return Integer(remainderAbs);
-    }
-    else {
-        if (divisor > Integer()) {
-            return Integer(absDivisor - remainderAbs);
-        } else {
-            return Integer(absDivisor - remainderAbs).MUL_ZM_Z();
-        }
-    }
+    Integer q = this->DIV_ZZ_Z(divisor);
+    Integer bq = divisor.MUL_ZZ_Z(q);
+    return this->SUB_ZZ_Z(bq);
 }
 
 /**
@@ -402,7 +358,7 @@ Integer Integer::MOD_ZZ_Z(const Integer& divisor) const {
  * для нуля возвращает "0".
  */
 std::string Integer::toString() const {
-    if (m_absolute == Natural(0)) {
+    if (*this == Integer()) {
         return "0";
     }
     
