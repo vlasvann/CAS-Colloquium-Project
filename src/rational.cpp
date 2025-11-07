@@ -160,8 +160,7 @@ Rational Rational::DIV_QQ_Q(const Rational& other) const {
     if(other.isZero()){ // Проверка на деление на ноль
         throw std::runtime_error("Деление на ноль!");
     }
-
-    int newSign = this->m_numerator.POZ_Z_D() * other.m_numerator.POZ_Z_D();
+    int newSign = (this->m_numerator.POZ_Z_D() + other.m_numerator.POZ_Z_D())%2;
     Integer newNum = Integer(this->m_numerator.getAbsolute() * other.m_denominator, newSign);
     Natural newDenum = this->m_denominator * other.m_numerator.getAbsolute();
 
