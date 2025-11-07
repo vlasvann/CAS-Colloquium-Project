@@ -98,10 +98,12 @@ void InputDialog::setupUI()
             "    border-radius: 6px;"
             "    padding: 8px;"
             "    margin-bottom: 10px;"
+            "    color: #2C3E50;"
             "}"
             "QLineEdit:focus {"
             "    border-color: #5DADE2;"       // Синий акцент при фокусе
             "    background-color: #F8FDFE;"
+            "    color: #2C3E50;"
             "}"
             );
 
