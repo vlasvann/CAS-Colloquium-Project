@@ -14,8 +14,6 @@
  */
 Natural::Natural() : m_digits({0}) {}
 
-Natural::Natural(int) {}
-=======
 /**
  * @brief Конструктор из строки.
  * @param number строка, содержащая натуральное число
