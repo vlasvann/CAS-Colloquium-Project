@@ -3,19 +3,19 @@
 
 #include <vector>
 #include <string>
+#include <utility> // для std::pair
 
 class Natural {
 private:
     std::vector<int> m_digits;
-
-public:
+    
+public: 
     Natural();
+    Natural(int number);
     Natural(const std::string& number);
-    Natural(int digit);
-    Natural(const std::vector<int>& digits);
-
-    int COM_NN_D(const Natural& other) const; //сравнение
-    bool NZER_N_B() const; //проверка на ноль
+    Natural(const std::vector<int>& digits); 
+    int COM_NN_D(const Natural& other) const; // сравнение
+    bool NZER_N_B() const; // проверка на ноль
 
     Natural ADD_1N_N() const; // Добавление 1
     Natural ADD_NN_N(const Natural& other) const; // Сложение
@@ -31,7 +31,7 @@ public:
     Natural GCF_NN_N(const Natural& other) const; // НОД
     Natural LCM_NN_N(const Natural& other) const; // НОК
 
-    std::string toString() const { return ""; }
+    std::string toString() const;
 
     Natural operator+(const Natural& other) const { return ADD_NN_N(other); }
     Natural operator-(const Natural& other) const { return SUB_NN_N(other); }
