@@ -128,9 +128,7 @@ Natural Integer::TRANS_Z_N() const {
     if(m_sign == 1){
         throw std::invalid_argument("Отрицательное число не натуральное число!");
     }
-    if (m_sign == 0){
-        return m_absolute;
-    }
+    return m_absolute;
 }
 
 /**
