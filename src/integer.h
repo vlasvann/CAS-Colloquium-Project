@@ -38,7 +38,6 @@ public:
 
     int getSign() const { return m_sign; } ///< Получение знака числа
 
-    Integer operator=(const Integer& other) const { return ADD_ZZ_Z(other); } ///< Оператор присваивания для целых чисел
     Integer operator+(const Integer& other) const { return ADD_ZZ_Z(other); } ///< Оператор сложения для целых чисел
     Integer operator-(const Integer& other) const { return SUB_ZZ_Z(other); } ///< Оператор вычитания для целых чисел
     Integer operator*(const Integer& other) const { return MUL_ZZ_Z(other); } ///< Оператор умножения для целых чисел
