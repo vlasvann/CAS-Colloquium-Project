@@ -1,53 +1,222 @@
 #include "parser.h"
+#include "polynomial.h"
+/*
+ * Developed by Kim Karina, group - 4382,
+ * Parser — реализация класса для разбора строк в объекты типов Natural, Integer, Rational и Polynomial.
+ */
 
-Natural Parser::parseNatural(const std::string &input)
-{
-	(void)input;
-    return Natural();
+/**
+ * @brief Вспомогательная функция для обрезки пробелов и проверки непустоты строки.
+ * @param str исходная строка
+ * @param errorMessage сообщение об ошибке при пустом вводе
+ * @return Очищенная строка без начальных и конечных пробелов
+ *
+*/
+std::string Parser::trimAndValidate(const std::string& str, const std::string& errorMessage) { 
+    size_t start = str.find_first_not_of(' ');
+    if (start == std::string::npos)
+        throw std::invalid_argument(errorMessage);
+    size_t end = str.find_last_not_of(' ');
+    return str.substr(start, end - start + 1);
 }
 
-Integer Parser::parseInteger(const std::string &input)
-{
-	(void)input;
-    return Integer();
+/**
+ * @brief Разбор строки в натуральное число.
+ * @param input строка, содержащая число
+ * @return Объект класса Natural
+ *
+ * Проверяет, что строка состоит только из цифр.
+ * Удаляет ведущие нули и создаёт объект Natural.
+ * В случае пустой строки или недопустимых символов выбрасывает исключение.
+*/
+Natural Parser::parseNatural(const std::string& input) {
+    std::string s = trimAndValidate(input, "Пустой ввод (только пробелы)");
+
+    for (char c : s) {
+        if (!std::isdigit(static_cast<unsigned char>(c)))
+            throw std::invalid_argument("Natural должен состоять только из цифр");
+    }
+
+    size_t nonZero = s.find_first_not_of('0');
+    if (nonZero == std::string::npos)
+        s = "0";
+    else
+        s = s.substr(nonZero);
+
+    return Natural(s);
 }
 
-Rational Parser::parseRational(const std::string &input)
-{
-	(void)input;
-    return Rational();
+/**
+ * @brief Разбор строки в целое число.
+ * @param input строка, содержащая число (с возможным знаком)
+ * @return Объект класса Integer
+ *
+ * Поддерживает знаки '+' и '-'. Проверяет корректность формата числа.
+ * Убирает ведущие нули и создаёт объект Integer с соответствующим знаком.
+*/
+Integer Parser::parseInteger(const std::string& input) {
+    std::string s = trimAndValidate(input, "Пустой ввод (только пробелы)");
+
+    int sign = 0;
+    if (s[0] == '-' || s[0] == '+') {
+        sign = (s[0] == '-') ? 1 : 0;
+        s.erase(0, 1);
+        s = trimAndValidate(s, "Отсутствует числовая часть после знака");
+    }
+
+    for (char c : s) {
+        if (!std::isdigit(static_cast<unsigned char>(c)))
+            throw std::invalid_argument("Integer должен состоять только из цифр");
+    }
+
+    size_t nz = s.find_first_not_of('0');
+    if (nz == std::string::npos)
+        s = "0";
+    else
+        s = s.substr(nz);
+    
+    Natural absValue(s);
+    return Integer(absValue, sign);
 }
 
-Polynomial Parser::parsePolynomial(const std::string &input)
-{
-	(void)input;
-    return Polynomial();
+/**
+ * @brief Разбор строки в рациональное число.
+ * @param input строка в формате "a/b" или просто "a"
+ * @return Объект класса Rational
+ *
+ * Поддерживает как целые, так и дробные формы.
+ * Проверяет корректность числителя и знаменателя.
+ * При ошибке выбрасывает исключение с пояснением.
+*/
+Rational Parser::parseRational(const std::string& input) {
+    try {
+        std::string s = trimAndValidate(input, "Пустой ввод (только пробелы)");
+        size_t slashPos = s.find('/');
+
+        if (slashPos == std::string::npos) {
+            Integer num = parseInteger(s);
+            Natural den("1");
+            return Rational(num, den);
+        }
+
+        std::string numStr = s.substr(0, slashPos);
+        std::string denStr = s.substr(slashPos + 1);
+
+        numStr = trimAndValidate(numStr, "Отсутствует числитель");
+        denStr = trimAndValidate(denStr, "Отсутствует знаменатель");
+
+        Integer numerator = parseInteger(numStr);
+        Natural denominator = parseNatural(denStr);
+
+        return Rational(numerator, denominator);
+    }
+    catch (const std::invalid_argument& e) {
+        throw std::runtime_error(std::string("Ошибка при разборе Rational: ") + e.what());
+    }
+    catch (const std::exception& e) {
+        throw std::runtime_error(std::string("Не удалось распарсить Rational: ") + e.what());
+    }
 }
 
-std::string Parser::toString(const Natural &num)
-{
-	(void)num;
-    std::string str = "52ngg";
-    return str;
+/**
+ * @brief Разбор строки в многочлен.
+ * @param input строка, представляющая многочлен
+ * @return Объект класса Polynomial
+ *
+ * Удаляет пробелы, добавляет знак '+' при необходимости.
+ * Использует регулярные выражения для выделения членов вида:
+ *   ±(число или дробь)x^степень
+ * Поддерживает сложение коэффициентов при одинаковых степенях.
+ * При некорректном формате выбрасывает исключение.
+*/
+Polynomial Parser::parsePolynomial(const std::string& input) {
+    std::string s = input;
+    s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
+    if (s.empty())
+        throw std::invalid_argument("Пустой ввод для Polynomial");
+
+    if (s[0] != '+' && s[0] != '-')
+        s = "+" + s;
+
+    std::unordered_map<int, Rational> terms;
+
+    std::regex termRegex(R"(([+-])(\d*(?:/\d+)?)?(x(?:\^(\d+))?)?)");
+    std::smatch match;
+    auto it = s.cbegin();
+
+    while (std::regex_search(it, s.cend(), match, termRegex)) {
+        std::string signStr = match[1];  // "+" или "-"
+        std::string coeffStr = match[2]; // числитель/дробь
+        std::string xPart    = match[3]; // x или x^k
+        std::string expStr   = match[4]; // k
+
+        bool negative = (signStr == "-");
+
+        Rational coeff;
+        if (coeffStr.empty()) {
+            coeff = Rational(Integer("1"), Natural("1"));
+        } else {
+            coeff = parseRational(coeffStr);
+        }
+
+        if (negative) {
+            std::string negStr = "-" + coeff.getNumerator().toString();
+            Integer negNum = parseInteger(negStr);
+            coeff = Rational(negNum, coeff.getDenominator());
+        }
+
+        int exp = 0;
+        if (!xPart.empty()) {
+            exp = expStr.empty() ? 1 : std::stoi(expStr);
+        }
+
+        if (terms.find(exp) != terms.end()) {
+            terms[exp] = terms[exp] + coeff;
+        } else {
+            terms[exp] = coeff;
+        }
+
+        it = match.suffix().first;
+    }
+
+    if (terms.empty())
+        throw std::invalid_argument("Не удалось распарсить ни одного члена многочлена");
+
+    return Polynomial(terms);
 }
 
-std::string Parser::toString(const Integer &num)
-{
-	(void)num;
-    std::string str = "52ngg";
-    return str;
+/**
+ * @brief Преобразует объект Natural в строку.
+ * @param value объект класса Natural
+ * @return Строковое представление натурального числа
+*/
+std::string Parser::toString(const Natural& value) const {
+    return value.toString();
 }
 
-std::string Parser::toString(const Rational &num)
-{
-	(void)num;
-    std::string str = "52ngg";
-    return str;
+/**
+ * @brief Преобразует объект Integer в строку.
+ * @param value объект класса Integer
+ * @return Строковое представление целого числа
+*/
+std::string Parser::toString(const Integer& value) const {
+    return value.toString();
 }
 
-std::string Parser::toString(const Polynomial &poly)
-{
-	(void)poly;
-    std::string str = "52ngg";
-    return str;
+/**
+ * @brief Преобразует объект Rational в строку.
+ * @param value объект класса Rational
+ * @return Строковое представление рационального числа
+*/
+std::string Parser::toString(const Rational& value) const {
+    return value.toString();
+}
+
+/**
+ * @brief Преобразует объект Polynomial в строку.
+ * @param value объект класса Polynomial
+ * @return Строковое представление многочлена
+*/
+std::string Parser::toString(const Polynomial& value) const {
+    return value.toString();
 }
