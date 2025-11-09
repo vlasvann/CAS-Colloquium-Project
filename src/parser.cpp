@@ -1,5 +1,5 @@
 #include "parser.h"
-
+#include "polynomial.h"
 /*
  * Developed by Kim Karina, group - 4382,
  * Parser — реализация класса для разбора строк в объекты типов Natural, Integer, Rational и Polynomial.
