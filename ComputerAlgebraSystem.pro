@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = ComputerAlgebraSystem
-CONFIG += c++17 static
+CONFIG += c++17
 QT += widgets
 
 QMAKE_LFLAGS += -static-libgcc -static-libstdc++
