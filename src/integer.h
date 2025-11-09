@@ -37,6 +37,7 @@ public:
     std::string toString() const; ///< Строковое представление числа
 
     int getSign() const { return m_sign; } ///< Получение знака числа
+    bool isZero() const { return POZ_Z_D() == 0; }
 
     Integer operator+(const Integer& other) const { return ADD_ZZ_Z(other); } ///< Оператор сложения для целых чисел
     Integer operator-(const Integer& other) const { return SUB_ZZ_Z(other); } ///< Оператор вычитания для целых чисел
