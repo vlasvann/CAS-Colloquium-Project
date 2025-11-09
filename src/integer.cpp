@@ -73,7 +73,7 @@ Natural Integer::ABS_Z_N() const {
  * положительным или отрицательным. Корректно обрабатывает пограничные случаи.
  */
 int Integer::POZ_Z_D() const {
-    if(m_absolute == Natural(0)){
+    if(!m_absolute.NZER_N_B()){
         return 0;
     }
     if (m_sign == 0){
@@ -122,13 +122,12 @@ Integer Integer::TRANS_N_Z(const Natural& natural) {
  * для отрицательных чисел и нуля, так как они не являются натуральными.
  */
 Natural Integer::TRANS_Z_N() const {
-    if (m_absolute == Natural(0)) {
-        throw std::invalid_argument("Ноль не натуральное число!");
-    }
     if(m_sign == 1){
-        throw std::invalid_argument("Отрицательное число не натуральное число!");
+        throw std::invalid_argument("Число должно быть неотрицательное");
     }
-    return m_absolute;
+    if (m_sign == 0){
+        return m_absolute;
+    }
 }
 
 /**
@@ -152,7 +151,7 @@ Integer Integer::ADD_ZZ_Z(const Integer& other) const {
 
     if (pos1 == pos2) {
         Natural sum = abs1 + abs2;
-        if (pos1 == 1) {
+        if (pos1 == -1) {
             return Integer(sum).MUL_ZM_Z();
         }
         return Integer(sum);
@@ -160,13 +159,13 @@ Integer Integer::ADD_ZZ_Z(const Integer& other) const {
 
     if (abs1 > abs2) {
         Natural diff = abs1 - abs2;
-        if (pos1 == 1) {
+        if (pos1 == -1) {
             return Integer(diff).MUL_ZM_Z();
         }
         return Integer(diff);
     } else if (abs2 > abs1) {
         Natural diff = abs2 - abs1;
-        if (pos2 == 1) {
+        if (pos2 == -1) {
             return Integer(diff).MUL_ZM_Z();
         }
         return Integer(diff);
@@ -182,14 +181,6 @@ Integer Integer::ADD_ZZ_Z(const Integer& other) const {
  * 
  * Реализует арифметическое вычитание через сложение с противоположным числом.
  * Преобразует операцию вычитания в операцию сложения с инвертированным знаком.
- */
-/**
- * @brief Вычитание целых чисел
- * @param other Вычитаемое
- * @return Результат вычитания
- * 
- * Реализует арифметическое вычитание целых чисел, используя операции с натуральными числами.
- * Корректно обрабатывает все комбинации знаков и значений.
  */
 Integer Integer::SUB_ZZ_Z(const Integer& other) const {
     Natural abs1 = this->ABS_Z_N();
@@ -223,13 +214,13 @@ Integer Integer::SUB_ZZ_Z(const Integer& other) const {
             return Integer(resultAbs, 1);
         } else {
             Natural resultAbs = abs2 - abs1;
-            return Integer(resultAbs);
+            return Integer(resultAbs); //swap
         }
     }
     
     if (this->POZ_Z_D() == 1 && other.POZ_Z_D() == -1) {
         Natural resultAbs = abs1 + abs2;
-        return Integer(resultAbs);
+        return Integer(resultAbs); //swap
     }
     
     if (this->POZ_Z_D() == -1 && other.POZ_Z_D() == 1) {
@@ -253,7 +244,7 @@ Integer Integer::MUL_ZZ_Z(const Integer& other) const {
     Natural abs1 = this->ABS_Z_N();
     Natural abs2 = other.ABS_Z_N();
 
-    if (abs1 == Natural(0) || abs2 == Natural(0)) {
+    if (!abs1.NZER_N_B() || !abs2.NZER_N_B()) {
         return Integer();
     }
 
@@ -292,7 +283,7 @@ Integer Integer::DIV_ZZ_Z(const Integer& divisor) const {
     Natural dividendAbs = this->ABS_Z_N();
     Natural divisorAbs = divisor.ABS_Z_N();
     Natural quotientAbs = dividendAbs.DIV_NN_N(divisorAbs);
-    bool isExactDivision = (dividendAbs % divisorAbs == Natural(0));
+    bool isExactDivision = (!((dividendAbs % divisorAbs).NZER_N_B()));
 
     // Оба числа положительные
     if (dividendSign > 0 && divisorSign > 0) {
@@ -339,7 +330,7 @@ Integer Integer::MOD_ZZ_Z(const Integer& divisor) const {
     if (divisor == Integer()) {
         throw std::invalid_argument("Деление на ноль");
     }
-    if (*this == Integer()) {
+    if (this->POZ_Z_D() == 0) {
         return Integer();
     }
     Integer q = this->DIV_ZZ_Z(divisor);
