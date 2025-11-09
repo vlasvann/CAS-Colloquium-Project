@@ -182,7 +182,7 @@ Polynomial Parser::parsePolynomial(const std::string& input) {
     if (terms.empty())
         throw std::invalid_argument("Не удалось распарсить ни одного члена многочлена");
 
-    return Polynomial(std::move(terms));
+    return Polynomial(terms);
 }
 
 /**
