@@ -30,7 +30,7 @@ public:
     Polynomial ADD_PP_P(const Polynomial&) const; // Сложение
     Polynomial SUB_PP_P(const Polynomial&) const; // Вычитание
     Polynomial MUL_PQ_P(const Rational&) const; // Умножение на рациональное число
-    Polynomial MUL_Pxk_P(Natural) const; // Умножение на x^k
+    Polynomial MUL_Pxk_P(const Natural&) const; // Умножение на x^k
 
     Rational LED_P_Q() const; // Старший коэффициент
     Natural DEG_P_N() const; // Степень многочлена
