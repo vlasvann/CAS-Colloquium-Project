@@ -155,13 +155,17 @@ Rational Rational::MUL_QQ_Q(const Rational& other) const {
 *
 * Числитель = числитель1 * знаменатель2;
 * Знаменатель = знаменатель1 * числитель2;
+* Для определения знака дроби складываем знаки числителей первой и второй дроби,
+* если знаки разные (-1 и 1), то в сумме будет 0, значит дробь отрицательная, иначе она положительная
 */
 Rational Rational::DIV_QQ_Q(const Rational& other) const {
     if(other.isZero()){ // Проверка на деление на ноль
         throw std::runtime_error("Деление на ноль!");
     }
-
-    int newSign = this->m_numerator.POZ_Z_D() * other.m_numerator.POZ_Z_D();
+    int newSign = 0;
+    if (this->m_numerator.POZ_Z_D() + other.m_numerator.POZ_Z_D() == 0){
+        newSign = 1;
+    }
     Integer newNum = Integer(this->m_numerator.ABS_Z_N() * other.m_denominator, newSign);
     Natural newDenum = this->m_denominator * other.m_numerator.ABS_Z_N();
 
