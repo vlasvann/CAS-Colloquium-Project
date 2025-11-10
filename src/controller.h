@@ -6,6 +6,7 @@
 #include "rational.h"
 #include "polynomial.h"
 #include "parser.h"
+#include "extraMethods.h"
 #include <map>
 #include <vector>
 #include <string>
@@ -67,6 +68,7 @@ public:
 
 private:
 	Parser m_parser;													///< Объект парсера
+    ExtraMethods m_extra;                                               ///< Объект экстра метода
     // Контейнеры для хранения метаданных операций
     std::map<std::string, std::vector<std::string>> m_typeMethods;      ///< Соответствие типов данных и доступных методов
     std::map<std::string, int> m_methodOperands;                        ///< Количество операндов для каждого метода
@@ -85,6 +87,7 @@ private:
     std::string executeIntegerOperation(const std::string& method, const std::vector<std::string>& inputs);    ///< Операции с целыми числами
     std::string executeRationalOperation(const std::string& method, const std::vector<std::string>& inputs);   ///< Операции с рациональными числами
     std::string executePolynomialOperation(const std::string& method, const std::vector<std::string>& inputs); ///< Операции с многочленами
+    std::string executeExtraOperation(const std::string& method, const std::vector<std::string>& inputs);      ///< Дополнительные операции
 };
 
 #endif // CONTROLLER_H

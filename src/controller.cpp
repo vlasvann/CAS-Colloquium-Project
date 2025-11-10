@@ -86,6 +86,21 @@ void Controller::initializeOperations() {
     m_methodDisplayNames["GCF_PP_P"] = "НОД многочленов";
     m_methodDisplayNames["DER_P_P"] = "Производная многочлена";
     m_methodDisplayNames["NMR_P_P"] = "Преобразование многочлена — кратные корни в простые";
+
+    //Дополнительные математические операции
+    m_typeMethods["Extra Methods"] = {"TRANS_BIN_ZN_Z", "TRANS_DECFAC_Z_Z", "TRANS_FACDEC_Z_Z", "FINDOUT_LUCKYNUMBER_N_B", "EXP_ZN_Z", "TRANS_PQ_STRNN_STR"};
+    m_methodOperands["TRANS_BIN_ZN_Z"] = 1;
+    m_methodOperands["TRANS_DECFAC_Z_Z"] = 1;
+    m_methodOperands["TRANS_FACDEC_Z_Z"] = 1;
+    m_methodOperands["FINDOUT_LUCKYNUMBER_N_B"] = 1;
+    m_methodOperands["EXP_ZN_Z"] = 2;
+    m_methodOperands["TRANS_PQ_STRNN_STR"] = 3;
+    m_methodDisplayNames["TRANS_BIN_ZN_Z"] = "Преобразование в двоичное представление";
+    m_methodDisplayNames["TRANS_DECFAC_Z_Z"] = "Преобразование в факториальное представление";
+    m_methodDisplayNames["TRANS_FACDEC_Z_Z"] = "Преобразование из факториальной системы";
+    m_methodDisplayNames["FINDOUT_LUCKYNUMBER_N_B"] = "Проверка на счастливое число";
+    m_methodDisplayNames["EXP_ZN_Z"] = "Возведение в степень";
+    m_methodDisplayNames["TRANS_PQ_STRNN_STR"] = "Преобразование между системами счисления";
 }
 
 /**
@@ -93,7 +108,7 @@ void Controller::initializeOperations() {
  * @return Вектор строк с названиями типов данных
  */
 std::vector<std::string> Controller::getAvailableTypes() const {
-    return {"Greeting", "Natural", "Integer", "Rational", "Polynomial"};
+    return {"Greeting", "Natural", "Integer", "Rational", "Polynomial", "Extra Methods"};
 }
 
 /**
@@ -150,6 +165,7 @@ std::string Controller::executeOperation(const std::string& type,
     else if(type == "Integer") result = executeIntegerOperation(method, inputs);
     else if (type == "Rational") result = executeRationalOperation(method, inputs);
     else if(type == "Polynomial") result = executePolynomialOperation(method, inputs);
+    else if(type == "Extra Methods") result = executeExtraOperation(method, inputs);
 
     return result;
 }
@@ -392,5 +408,54 @@ std::string Controller::executePolynomialOperation(const std::string& method, co
         Polynomial result = a.NMR_P_P();
         return m_parser.toString(result);
     }
+    else throw std::invalid_argument("Неизвестный метод!");
+}
+
+/**
+ * @brief Выполнить дополнительные операции
+ * @param method Техническое имя метода
+ * @param inputs Вектор входных данных
+ * @return Результат операции в строковом представлении
+ */
+std::string Controller::executeExtraOperation(const std::string& method, const std::vector<std::string>& inputs){
+    if(method == "TRANS_BIN_ZN_Z"){
+        if(inputs.size() < 2) throw std::invalid_argument("Вы ввели слишком мало операндов!");
+        Integer a = m_parser.parseInteger(inputs[0]);
+        Natural b = m_parser.parseNatural(inputs[1]);
+        Integer result = m_extra.TRANS_BIN_ZN_Z(a, b);
+        return m_parser.toString(result);
+    }
+    else if(method == "TRANS_DECFAC_Z_Z"){
+        if(inputs.size() < 1) throw std::invalid_argument("Вы ввели слишком мало операндов!");
+        Integer a = m_parser.parseInteger(inputs[0]);
+        Integer result = m_extra.TRANS_DECFAC_Z_Z(a);
+        return m_parser.toString(result);
+    }
+    else if(method == "TRANS_FACDEC_Z_Z"){
+        if(inputs.size() < 1) throw std::invalid_argument("Вы ввели слишком мало операндов!");
+        Integer a = m_parser.parseInteger(inputs[0]);
+        Integer result = m_extra.TRANS_FACDEC_Z_Z(a);
+        return m_parser.toString(result);
+    }
+    else if(method == "FINDOUT_LUCKYNUMBER_N_B"){
+        if(inputs.size() < 1) throw std::invalid_argument("Вы ввели слишком мало операндов!");
+        Natural a = m_parser.parseNatural(inputs[0]);
+        bool result = m_extra.FINDOUT_LUCKYNUMBER_N_B(a);
+        return m_parser.toString(result);
+    }
+    else if(method == "EXP_ZN_Z"){
+        if(inputs.size() < 2) throw std::invalid_argument("Вы ввели слишком мало операндов!");
+        Integer a = m_parser.parseInteger(inputs[0]);
+        Natural b = m_parser.parseNatural(inputs[1]);
+        Integer result = m_extra.EXP_ZN_Z(a, b);
+        return m_parser.toString(result);
+    }
+    else if(method == "TRANS_PQ_STRNN_STR"){
+        if(inputs.size() < 3) throw std::invalid_argument("Вы ввели слишком мало операндов!");
+        Natural a = m_parser.parseNatural(inputs[1]);
+        Natural b = m_parser.parseNatural(inputs[2]);
+        return m_extra.TRANS_PQ_STRNN_STR(m_parser.TRANS_PQ_STRNN_STR(inputs[0], a));
+    }
+    
     else throw std::invalid_argument("Неизвестный метод!");
 }
