@@ -30,11 +30,11 @@ std::string Parser::trimAndValidate(const std::string& str, const std::string& e
  * В случае пустой строки или недопустимых символов выбрасывает исключение.
 */
 Natural Parser::parseNatural(const std::string& input) {
-    std::string s = trimAndValidate(input, "Пустой ввод (только пробелы)");
+    std::string s = trimAndValidate(input, "Пустой ввод");
 
     for (char c : s) {
         if (!std::isdigit(static_cast<unsigned char>(c)))
-            throw std::invalid_argument("Natural должен состоять только из цифр");
+            throw std::invalid_argument("Число должно состоять только из цифр");
     }
 
     size_t nonZero = s.find_first_not_of('0');
@@ -55,7 +55,7 @@ Natural Parser::parseNatural(const std::string& input) {
  * Убирает ведущие нули и создаёт объект Integer с соответствующим знаком.
 */
 Integer Parser::parseInteger(const std::string& input) {
-    std::string s = trimAndValidate(input, "Пустой ввод (только пробелы)");
+    std::string s = trimAndValidate(input, "Пустой ввод");
 
     int sign = 0;
     if (s[0] == '-' || s[0] == '+') {
@@ -66,7 +66,7 @@ Integer Parser::parseInteger(const std::string& input) {
 
     for (char c : s) {
         if (!std::isdigit(static_cast<unsigned char>(c)))
-            throw std::invalid_argument("Integer должен состоять только из цифр");
+            throw std::invalid_argument("Число должно состоять только из цифр");
     }
 
     size_t nz = s.find_first_not_of('0');
@@ -90,7 +90,7 @@ Integer Parser::parseInteger(const std::string& input) {
 */
 Rational Parser::parseRational(const std::string& input) {
     try {
-        std::string s = trimAndValidate(input, "Пустой ввод (только пробелы)");
+        std::string s = trimAndValidate(input, "Пустой ввод");
         size_t slashPos = s.find('/');
 
         if (slashPos == std::string::npos) {
@@ -111,10 +111,10 @@ Rational Parser::parseRational(const std::string& input) {
         return Rational(numerator, denominator);
     }
     catch (const std::invalid_argument& e) {
-        throw std::runtime_error(std::string("Ошибка при разборе Rational: ") + e.what());
+        throw std::runtime_error(e.what());
     }
     catch (const std::exception& e) {
-        throw std::runtime_error(std::string("Не удалось распарсить Rational: ") + e.what());
+        throw std::runtime_error(e.what());
     }
 }
 
@@ -133,7 +133,7 @@ Polynomial Parser::parsePolynomial(const std::string& input) {
     std::string s = input;
     s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
     if (s.empty())
-        throw std::invalid_argument("Пустой ввод для Polynomial");
+        throw std::invalid_argument("Пустой ввод");
 
     if (s[0] != '+' && s[0] != '-')
         s = "+" + s;
@@ -180,7 +180,7 @@ Polynomial Parser::parsePolynomial(const std::string& input) {
     }
 
     if (terms.empty())
-        throw std::invalid_argument("Не удалось распарсить ни одного члена многочлена");
+        throw std::invalid_argument("Не найдено ни одного корректного члена многочлена");
 
     return Polynomial(terms);
 }
