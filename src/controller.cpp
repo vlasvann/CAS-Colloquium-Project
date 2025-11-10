@@ -454,7 +454,7 @@ std::string Controller::executeExtraOperation(const std::string& method, const s
         if(inputs.size() < 3) throw std::invalid_argument("Вы ввели слишком мало операндов!");
         Natural a = m_parser.parseNatural(inputs[1]);
         Natural b = m_parser.parseNatural(inputs[2]);
-        return m_extra.TRANS_PQ_STRNN_STR(m_parser.TRANS_PQ_STRNN_STR(inputs[0], a));
+        return m_extra.TRANS_PQ_STRNN_STR(m_parser.TRANS_PQ_STRNN_STR(inputs[0], &a),a, b);
     }
     
     else throw std::invalid_argument("Неизвестный метод!");

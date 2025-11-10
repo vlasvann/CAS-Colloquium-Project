@@ -292,8 +292,8 @@ QString InputDialog::getOperandLabel(int index) const
     }  
     else if(m_methodName == "TRANS_PQ_STRNN_STR"){
         if(index == 0) return "Исходное число";
-        else if(index == 1) return "Исходная СС";
-        else if(index == 2) return "Целевая СС";
+        else if(index == 1) return "Исходная СС (2 ≤ CC ≤ 36)";
+        else if(index == 2) return "Целевая СС (2 ≤ CC ≤ 36)";
     }
     else if(m_methodName == "EXP_ZN_Z"){
         if(index == 0) return "Исходное число";

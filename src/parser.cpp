@@ -12,7 +12,7 @@
  * @return Очищенная строка без начальных и конечных пробелов
  *
 */
-std::string Parser::trimAndValidate(const std::string& str, const std::string& errorMessage) { 
+std::string Parser::trimAndValidate(const std::string& str, const std::string& errorMessage) const {
     size_t start = str.find_first_not_of(' ');
     if (start == std::string::npos)
         throw std::invalid_argument(errorMessage);
@@ -183,6 +183,52 @@ Polynomial Parser::parsePolynomial(const std::string& input) {
         throw std::invalid_argument("Не удалось распарсить ни одного члена многочлена");
 
     return Polynomial(terms);
+}
+
+int Parser::charToDigitValue(char c) const
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'A' && c <= 'Z')
+        return 10 + (c - 'A');
+    if (c >= 'a' && c <= 'z')
+        return 10 + (c - 'a');
+    return -1;
+}
+
+std::pair<std::string, int> Parser::TRANS_PQ_STRNN_STR(
+    std::string numStrInput,
+    Natural* baseP) const
+{
+    if (baseP == nullptr)
+        throw std::invalid_argument("Указатель на основание системы счисления равен nullptr");
+
+    std::string numStr = trimAndValidate(numStrInput, "Пустой ввод для числа");
+
+    int signInt = 0;
+
+    if (numStr[0] == '+' || numStr[0] == '-')
+    {
+        signInt = (numStr[0] == '-') ? 1 : 0;
+        numStr.erase(0, 1);
+        numStr = trimAndValidate(numStr, "Отсутствует числовая часть после знака");
+    }
+
+    std::transform(numStr.begin(), numStr.end(), numStr.begin(),
+                   [](unsigned char c){ return std::toupper(c); });
+
+    for (char c : numStr)
+    {
+        int value = charToDigitValue(c);
+        if (value < 0)
+            throw std::invalid_argument(std::string("Недопустимый символ в числе: ") + c);
+
+        Natural digit(std::to_string(value));
+        if (digit >= *baseP)
+            throw std::invalid_argument("Цифра не принадлежит системе счисления");
+    }
+
+    return {numStr, signInt}; //Строка и int(знак 0 или 1(отр))
 }
 
 /**
