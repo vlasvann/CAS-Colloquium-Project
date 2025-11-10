@@ -1,5 +1,4 @@
 ﻿#include "extraMethods.h"
-#include <QDebug>
 
 /**
      * @brief Разбивает число на вектор цифр в заданной системе счисления.
@@ -225,9 +224,7 @@ Integer ExtraMethods::EXP_ZN_Z(const Integer& num, const Natural& exp) const {
      * @return Строковое представление числа в СС baseQ (с учётом знака).
      */
 std::string ExtraMethods::TRANS_PQ_STRNN_STR(const std::pair<std::string, int> num, const Natural& baseP, const Natural& baseQ) const {
-    std::cout << num.first << std::endl;
-    qDebug() << baseP.toString();
-    qDebug() << baseQ.toString();
+
     for (auto& c : num.first)
     {
         Natural digit;
@@ -235,7 +232,7 @@ std::string ExtraMethods::TRANS_PQ_STRNN_STR(const std::pair<std::string, int> n
             digit = Natural(c - '0');
         else
             digit = Natural(10 + (c - 'A'));
-        std::cout << "char: " << digit.toString() << std::endl;
+
         if (digit > baseP || digit == baseP)
             throw std::invalid_argument("Неверная начальная система счисления!");
     }
