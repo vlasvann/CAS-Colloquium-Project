@@ -124,7 +124,7 @@ Natural Natural::ADD_NN_N(const Natural& other) const {
  * @return разность чисел (this - other)
  * @throw std::invalid_argument если результат отрицательный
  */
-Natural Natural::SUB_NN_N(const Natural& other) const { 
+Natural Natural::SUB_NN_N(const Natural& other) const {
     if (this->COM_NN_D(other) == -1) {
         throw std::invalid_argument("Первое число должно быть больше или равно второму");
     }
@@ -266,7 +266,7 @@ std::pair<int, int> Natural::DIV_NN_Dk(const Natural& divisor) const {
             }
         }
     }
-    
+
     return {0, 0};
 }
 
