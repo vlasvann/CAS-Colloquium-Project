@@ -186,6 +186,73 @@ Polynomial Parser::parsePolynomial(const std::string& input) {
 }
 
 /**
+ * @brief Преобразует символ в его числовое значение в зависимости от системы счисления.
+ * @param c символ, который нужно интерпретировать как цифру (0–9, A–Z, a–z)
+ * @return Целое значение, соответствующее символу: 
+ *         0–9 для цифр, 10–35 для латинских букв (без учета регистра).
+ *         Если символ не является допустимым — возвращает -1.
+ *
+ * Используется при разборе чисел в произвольной системе счисления.
+ * Например, 'A' или 'a' → 10, 'F' → 15, '9' → 9.
+ */
+int Parser::charToDigitValue(char c) const
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'A' && c <= 'Z')
+        return 10 + (c - 'A');
+    if (c >= 'a' && c <= 'z')
+        return 10 + (c - 'a');
+    return -1;
+}
+
+/**
+ * @brief Разбирает строку числа в указанной системе счисления.
+ * @param numStrInput строка, содержащая представление числа (может иметь знак '+' или '-')
+ * @param baseP указатель на объект класса Natural, задающий основание системы счисления
+ * @return Пара, состоящая из:
+ *         - очищенной и приведённой к верхнему регистру строки числа (без знака);
+ *         - целого признака знака (0 — положительное, 1 — отрицательное).
+ *
+ * Пример:
+ *   base = 16, numStrInput = "-1F" → вернёт {"1F", 1}.
+ */
+std::pair<std::string, int> Parser::parseBaseNumber(
+    std::string numStrInput,
+    Natural* baseP) const
+{
+    if (baseP == nullptr)
+        throw std::invalid_argument("Указатель на основание системы счисления равен nullptr");
+
+    std::string numStr = trimAndValidate(numStrInput, "Пустой ввод для числа");
+
+    int signInt = 0;
+
+    if (numStr[0] == '+' || numStr[0] == '-')
+    {
+        signInt = (numStr[0] == '-') ? 1 : 0;
+        numStr.erase(0, 1);
+        numStr = trimAndValidate(numStr, "Отсутствует числовая часть после знака");
+    }
+
+    std::transform(numStr.begin(), numStr.end(), numStr.begin(),
+                   [](unsigned char c){ return std::toupper(c); });
+
+    for (char c : numStr)
+    {
+        int value = charToDigitValue(c);
+        if (value < 0)
+            throw std::invalid_argument(std::string("Недопустимый символ в числе: ") + c);
+
+        Natural digit(std::to_string(value));
+        if (digit >= *baseP)
+            throw std::invalid_argument("Цифра не принадлежит системе счисления");
+    }
+
+    return {numStr, signInt}; 
+}
+
+/**
  * @brief Преобразует объект Natural в строку.
  * @param value объект класса Natural
  * @return Строковое представление натурального числа
