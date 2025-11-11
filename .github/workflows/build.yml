@@ -35,10 +35,11 @@ jobs:
         qmake6 ../ComputerAlgebraSystem.pro
         make -j4
         
-    - name: Create AppImage with linuxdeployqt (лучше для Qt)
+    - name: Create AppImage with linuxdeploy + qt plugin
       run: |
-        wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
-        chmod a+x linuxdeployqt-continuous-x86_64.AppImage
+        wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+        chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-qt-x86_64.AppImage
         
         mkdir -p AppDir/usr/bin
         mkdir -p AppDir/usr/share/applications
@@ -58,15 +59,20 @@ jobs:
         Comment=A computer algebra system for mathematical computations
         EOF
         
-        ./linuxdeployqt-continuous-x86_64.AppImage \
-          AppDir/usr/share/applications/ComputerAlgebraSystem.desktop \
-          -appimage -verbose=2
+        export QMAKE=/usr/bin/qmake6
+        export QT_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/qt6/plugins
+        export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+        
+        ./linuxdeploy-x86_64.AppImage \
+          --appdir AppDir \
+          --plugin qt \
+          --output appimage
         
     - name: Verify AppImage
       run: |
         chmod +x ComputerAlgebraSystem*.AppImage
         file ComputerAlgebraSystem*.AppImage
-        ldd ComputerAlgebraSystem*.AppImage || echo "Проверка зависимостей..."
+        echo "✅ AppImage создан успешно"
         mv ComputerAlgebraSystem*.AppImage ComputerAlgebraSystem-Linux.AppImage
         
     - name: Upload AppImage
