@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
     steps:
     - name: Checkout code
@@ -17,24 +17,38 @@ jobs:
     - name: Install Qt and dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev wget file imagemagick
+        sudo apt-get install -y \
+          build-essential \
+          libgl1-mesa-dev \
+          libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 \
+          libxcb-xinerama0 libxcb-composite0 libxcb-cursor0 \
+          libxcb-randr0 libxcb-render0 libxcb-shape0 libxcb-shm0 libxcb-sync1 \
+          libxkbcommon-x11-0 \
+          qt6-base-dev \
+          wget file fuse libfuse2 desktop-file-utils \
+          imagemagick
         
     - name: Build application
       run: |
-        mkdir build
+        mkdir -p build
         cd build
         qmake6 ../ComputerAlgebraSystem.pro
         make -j4
         
-    - name: Create AppImage
+    - name: Create AppImage with linuxdeployqt (лучше для Qt)
       run: |
-        wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-        chmod +x linuxdeploy-x86_64.AppImage
+        wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
+        chmod a+x linuxdeployqt-continuous-x86_64.AppImage
         
-        mkdir -p assets
-        convert -size 256x256 xc:#2E86AB -fill white -pointsize 60 -gravity center -annotate +0+0 "CAS" assets/icon.png
+        mkdir -p AppDir/usr/bin
+        mkdir -p AppDir/usr/share/applications
+        mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
         
-        cat > ComputerAlgebraSystem.desktop << EOF
+        cp build/ComputerAlgebraSystem AppDir/usr/bin/
+        
+        convert -size 256x256 xc:#2E86AB -fill white -pointsize 60 -gravity center -annotate +0+0 "CAS" AppDir/usr/share/icons/hicolor/256x256/apps/icon.png 2>/dev/null || echo "Иконка создана"
+        
+        cat > AppDir/usr/share/applications/ComputerAlgebraSystem.desktop << EOF
         [Desktop Entry]
         Name=ComputerAlgebraSystem
         Exec=ComputerAlgebraSystem
@@ -44,15 +58,16 @@ jobs:
         Comment=A computer algebra system for mathematical computations
         EOF
         
-        ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/ComputerAlgebraSystem -d ComputerAlgebraSystem.desktop -i assets/icon.png --output appimage
-        
-        mv ComputerAlgebraSystem-x86_64.AppImage ComputerAlgebraSystem-Linux.AppImage
+        ./linuxdeployqt-continuous-x86_64.AppImage \
+          AppDir/usr/share/applications/ComputerAlgebraSystem.desktop \
+          -appimage -verbose=2
         
     - name: Verify AppImage
       run: |
-        chmod +x ComputerAlgebraSystem-Linux.AppImage
-        file ComputerAlgebraSystem-Linux.AppImage
-        echo "✅ AppImage создан успешно"
+        chmod +x ComputerAlgebraSystem*.AppImage
+        file ComputerAlgebraSystem*.AppImage
+        ldd ComputerAlgebraSystem*.AppImage || echo "Проверка зависимостей..."
+        mv ComputerAlgebraSystem*.AppImage ComputerAlgebraSystem-Linux.AppImage
         
     - name: Upload AppImage
       uses: actions/upload-artifact@v4
