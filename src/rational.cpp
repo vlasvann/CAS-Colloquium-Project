@@ -24,7 +24,7 @@ Rational::Rational() : m_numerator(Integer("0")), m_denominator(Natural("1")) {}
  * Создаёт Rational с заданным числителем и знаменателем
 */
 Rational::Rational(const Integer& num, const Natural& den) : m_numerator(num), m_denominator(den) {
-    if (this->m_denominator == Natural("0")){
+    if (!(this->m_denominator.NZER_N_B())){
         throw std::invalid_argument("Ноль в знаменателе рационального числа");
     }
 }
@@ -134,42 +134,64 @@ Rational Rational::SUB_QQ_Q(const Rational& other) const {
     return Rational(newNum, newDen).RED_Q_Q();
 }
 
+// /**
+// * @brief Перемножает два рациональных числа
+// * @param other Второй множитель
+// * @return Rational Результат произведения
+// *
+// * Числитель = числитель1 * числитель2;
+// * Знаменатель = знаменатель1 * знаменатель2;
+// */
+// Rational Rational::MUL_QQ_Q(const Rational& other) const {
+//     Integer newNum = this->m_numerator * other.m_numerator;
+//     Natural newDen = this->m_denominator * other.m_denominator;
+//     return Rational(newNum, newDen).RED_Q_Q();
+// }
+
 /**
 * @brief Перемножает два рациональных числа
+*
+* Вычисляет два нода для числителя и знаменателя другой дроби
+* и числителя другой дроби и знменателя
+*
+*
+* Числитель = числитель1/нод1 * числитель2.нод2;
+* Знаменатель = знаменатель1/нод2 * знаменатель2/нод1;
+*
 * @param other Второй множитель
 * @return Rational Результат произведения
-*
-* Числитель = числитель1 * числитель2;
-* Знаменатель = знаменатель1 * знаменатель2;
 */
 Rational Rational::MUL_QQ_Q(const Rational& other) const {
-    Integer newNum = this->m_numerator * other.m_numerator;
-    Natural newDen = this->m_denominator * other.m_denominator;
-    return Rational(newNum, newDen).RED_Q_Q();
+    Natural gcf1=Natural(this->m_numerator.ABS_Z_N()).GCF_NN_N(other.m_denominator); // нод1
+    Natural gcf2=Natural(other.m_numerator.ABS_Z_N()).GCF_NN_N(this->m_denominator); // нод2
+    return Rational(this->m_numerator.DIV_ZZ_Z(Integer(gcf1,1)) * other.getNumerator().DIV_ZZ_Z(Integer(gcf2,1)), this->m_denominator.DIV_NN_N(gcf2) * other.getDenominator().DIV_NN_N(gcf1));
 }
 
 /**
 * @brief Делит рациональное число на другое
+*
+* Вычисляет два нода для числителя и знаменателя
+* и числителя другой дроби и знменателя другой дроби
+*
+* Числитель = числитель1/нод1 * знаменатель2/нод2;
+* Знаменатель = знаменатель1/нод2 * числитель2/нод1;
+*
 * @param other Делимое
 * @return Rational Результат деления
-*
-* Числитель = числитель1 * знаменатель2;
-* Знаменатель = знаменатель1 * числитель2;
-* Для определения знака дроби складываем знаки числителей первой и второй дроби,
-* если знаки разные (-1 и 1), то в сумме будет 0, значит дробь отрицательная, иначе она положительная
 */
 Rational Rational::DIV_QQ_Q(const Rational& other) const {
-    if(other.isZero()){ // Проверка на деление на ноль
-        throw std::runtime_error("Деление на ноль!");
-    }
-    int newSign = 0;
-    if (this->m_numerator.POZ_Z_D() + other.m_numerator.POZ_Z_D() == 0){
-        newSign = 1;
-    }
-    Integer newNum = Integer(this->m_numerator.ABS_Z_N() * other.m_denominator, newSign);
-    Natural newDenum = this->m_denominator * other.m_numerator.ABS_Z_N();
+    if(other.isZero()) // Проверка на деление на ноль
+        throw std::runtime_error("Zero Division!!!");
+    Natural gcf1=Natural(this->m_numerator.ABS_Z_N()).GCF_NN_N(other.m_numerator.ABS_Z_N());    // нод1
+    Natural gcf2=Natural(other.m_denominator.GCF_NN_N(this->m_denominator));                    // нод2
 
-    return Rational(newNum, newDenum).RED_Q_Q();
+    int sign=this->m_numerator.POZ_Z_D() * other.m_numerator.POZ_Z_D();
+
+    Integer newNum=Integer(this->m_numerator.ABS_Z_N().DIV_NN_N(gcf1) * other.m_denominator.DIV_NN_N(gcf2),
+                             (sign<1));
+    Natural newDenum=this->m_denominator.DIV_NN_N(gcf2) * other.getNumerator().ABS_Z_N().DIV_NN_N(gcf1);
+
+    return Rational(newNum, newDenum);
 }
 
 /**
