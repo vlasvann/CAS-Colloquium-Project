@@ -54,10 +54,11 @@ void InputDialog::setupUI()
         );
 
     // Создание описания операции с параметрами
-    QString description = QString("Метод: %1\nТип данных: %2\nВведите %3 операнда:")
+    QString description = QString("Метод: %1\nТип данных: %2\nВведите %3:")
                               .arg(QString::fromStdString(m_russianType))
                               .arg(QString::fromStdString(m_dataType))
-                              .arg(m_operandCount);
+                              .arg(m_operandCount > 1 ? QString::number(m_operandCount) + " операнда" : QString::number(m_operandCount) + " операнд");
+
     m_descriptionLabel->setText(description);
 
     // Стилизация метки описания с акцентным оформлением
@@ -283,12 +284,20 @@ QString InputDialog::getOperandLabel(int index) const
     // Специальные случаи для операций со смешанными типами данных
     if (m_methodName == "MUL_PQ_P") {
         if (index == 0) return "Многочлен:";
-        if (index == 1) return "Рациональное число:";
+        else if (index == 1) return "Рациональное число:";
     }
-
-    if (m_methodName == "DIV_PP_P") {
+    else if (m_methodName == "DIV_PP_P") {
         if (index == 0) return "Делимое (многочлен):";
-        if (index == 1) return "Делитель (многочлен):";
+        else if (index == 1) return "Делитель (многочлен):";
+    }  
+    else if(m_methodName == "TRANS_PQ_STRNN_STR"){
+        if(index == 0) return "Исходное число";
+        else if(index == 1) return "Исходная СС (2 ≤ CC ≤ 36)";
+        else if(index == 2) return "Целевая СС (2 ≤ CC ≤ 36)";
+    }
+    else if(m_methodName == "EXP_ZN_Z"){
+        if(index == 0) return "Исходное число";
+        else return "Степень";
     }
 
     // Стандартная нумерация операндов для большинства операций
@@ -310,17 +319,22 @@ QString InputDialog::getOperandPlaceholder(int index) const
         if (index == 0) return "например: 3x^2 + 2x + 1 или x^3 - 5x";
         if (index == 1) return "например: 2/3 или -5/2 или 7";
     }
+    else if(m_methodName == "EXP_ZN_Z") {
+        if(index == 0)  return "например: -123 или +456";
+        else return "например: 12345";
+    }
+    else if(m_methodName == "TRANS_PQ_STRNN_STR"){
+        if(index == 0) return "например: -123 или +456";
+        else if(index == 1) return "например: 12345";
+        else return "например: 12345";
+    }
 
     // Общие шаблоны ввода по типам данных
-    if (m_dataType == "Natural") {
-        return "например: 12345";
-    } else if (m_dataType == "Integer") {
-        return "например: -123 или +456";
-    } else if (m_dataType == "Rational") {
-        return "например: 3/4 или -5/2";
-    } else if (m_dataType == "Polynomial") {
-        return "например: 3x^3 + 2x + 1";
-    }
+    if (m_dataType == "Natural") return "например: 12345";
+    else if (m_dataType == "Integer") return "например: -123 или +456";
+    else if (m_dataType == "Rational") return "например: 3/4 или -5/2";
+    else if (m_dataType == "Polynomial") return "например: 3x^3 + 2x + 1";
+    else if(m_dataType == "Extra Methods") return "например: -123 или +456";
 
     // Подсказка по умолчанию для неизвестных типов
     return "введите значение";
