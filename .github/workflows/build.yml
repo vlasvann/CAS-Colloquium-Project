@@ -1,5 +1,4 @@
-name: Build Linux AppImage
-
+name: Ubuntu 22.04 / Qt 6.5.0
 on:
   pull_request:
     branches: [ main ]
@@ -7,79 +6,70 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  buildUbuntu:
     runs-on: ubuntu-22.04
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Install dependencies
+    - name: get container ready for build
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          qt6-base-dev \
-          qt6-charts-dev \
-          libgl1-mesa-dev \
-          libxcb-icccm4 \
-          libxcb-image0 \
-          libxcb-keysyms1 \
-          libxcb-render-util0 \
-          libxcb-xinerama0 \
-          libxcb-composite0 \
-          wget \
-          file \
-          fuse \
-          libfuse2 \
-          desktop-file-utils
+        sudo apt-get upgrade -y
+        DEBIAN_FRONTEND=noninteractive sudo apt-get install -y -q --force-yes \
+        automake cmake git wget libfuse2 desktop-file-utils tree \
+        build-essential libgl1-mesa-dev libxkbcommon-x11-0 libpulse-dev \
+        libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 \
+        libxcb-xinerama0 libxcb-composite0 libxcb-cursor0 libxcb-damage0 \
+        libxcb-dpms0 libxcb-dri2-0 libxcb-dri3-0 libxcb-ewmh2 libxcb-glx0 \
+        libxcb-present0 libxcb-randr0 libxcb-record0 libxcb-render0 libxcb-res0 \
+        libxcb-screensaver0 libxcb-shape0 libxcb-shm0 libxcb-sync1 libxcb-util1 libegl1 \
+        ninja-build
 
-    - name: Build application with qmake
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        aqtversion: '==3.1.*'
+        py7zrversion: '>=0.20.2'
+        version: '6.5.0'
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        modules: 'qtcharts'
+
+    - name: checkout sources
+      uses: actions/checkout@v2
+
+    - name: build application
       run: |
-        mkdir -p build
-        qmake6 CONFIG+=release -o build/Makefile
-        cd build
+        echo "--------------------------------------------------------------"
+        echo "building desktop"
+        qmake6 CONFIG+=release -o Makefile
         make -j$(nproc)
 
-    - name: Create AppDir
+    - name: package artifacts
       run: |
         mkdir -p appdir/usr/bin/
-        cp build/ComputerAlgebraSystem appdir/usr/bin/
+        cp ComputerAlgebraSystem appdir/usr/bin/
         
         cat > ComputerAlgebraSystem.desktop << EOF
-            [Desktop Entry]
-            Name=ComputerAlgebraSystem
-            Exec=ComputerAlgebraSystem
-            Icon=icon
-            Type=Application
-            Categories=Education;Science;
-            Comment=A computer algebra system for mathematical computations
-            EOF
+          [Desktop Entry]
+          Name=ComputerAlgebraSystem
+          Exec=ComputerAlgebraSystem
+          Icon=icon
+          Type=Application
+          Categories=Education;Science;
+          Comment=A computer algebra system for mathematical computations
+          EOF
         
         mkdir -p appdir/usr/share/applications/
         cp ComputerAlgebraSystem.desktop appdir/usr/share/applications/
-
-    - name: Download linuxdeployqt
-      run: |
+        
         wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
         chmod a+x linuxdeployqt-continuous-x86_64.AppImage
+        ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/ComputerAlgebraSystem.desktop -appimage -verbose=2 -extra-plugins=iconengines
 
-    - name: Create AppImage
-      run: |
-        ./linuxdeployqt-continuous-x86_64.AppImage \
-          appdir/usr/share/applications/ComputerAlgebraSystem.desktop \
-          -appimage -verbose=2
-
-    - name: Verify AppImage
-      run: |
-        chmod +x ComputerAlgebraSystem*.AppImage
-        file ComputerAlgebraSystem*.AppImage
-        echo "✅ AppImage создан успешно"
-        mv ComputerAlgebraSystem*.AppImage ComputerAlgebraSystem-Linux.AppImage
-        
     - name: Upload AppImage
       uses: actions/upload-artifact@v4
       with:
         name: ComputerAlgebraSystem-Linux-AppImage
-        path: ComputerAlgebraSystem-Linux.AppImage
+        path: ComputerAlgebraSystem*.AppImage
         retention-days: 30
