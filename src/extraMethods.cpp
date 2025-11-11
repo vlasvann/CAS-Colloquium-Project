@@ -1,4 +1,5 @@
 ﻿#include "extraMethods.h"
+#include <algorithm> 
 
 /**
      * @brief Разбивает число на вектор цифр в заданной системе счисления.
