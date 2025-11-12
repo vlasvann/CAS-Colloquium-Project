@@ -52,16 +52,6 @@ Natural ExtraMethods::TRANS_PDEC_STRN_N(const std::string& num, const Natural& b
     if (base < Natural("2"))
         throw std::invalid_argument("Неверное основание: base должен быть больше 1");
 
-    for (auto& c : num)
-    {
-        Natural digit;
-        if (c >= '0' && c <= '9')
-            digit = Natural(c - '0');
-        else
-            digit = Natural(10 + (c - 'A'));
-        if (digit >= base)
-            throw std::invalid_argument("Неверная начальная система счисления!");
-    }
     Natural N("0");
     for (auto& c : num) {
         Natural digit;
@@ -232,17 +222,6 @@ Integer ExtraMethods::EXP_ZN_Z(const Integer& num, const Natural& exp) const {
      * @return Строковое представление числа в СС baseQ (с учётом знака).
      */
 std::string ExtraMethods::TRANS_PQ_STRNN_STR(const std::pair<std::string, int> num, const Natural& baseP, const Natural& baseQ) const {
-    for (auto& c : num.first)
-    {
-        Natural digit;
-        if (c >= '0' && c <= '9')
-            digit = Natural(c - '0');
-        else
-            digit = Natural(10 + (c - 'A'));
-        if (digit > baseP || digit == baseP)
-            throw std::invalid_argument("Неверная начальная система счисления!");
-    }
-    
     std::vector<Natural> QNumVec = GETDIGITS_NN_VECN(TRANS_PDEC_STRN_N(num.first, baseP), baseQ);
 
     std::string res = "";
