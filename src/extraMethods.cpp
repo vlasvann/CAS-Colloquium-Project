@@ -1,4 +1,6 @@
 ﻿#include "extraMethods.h"
+#include <algorithm> 
+#include <set>
 
 /**
      * @brief Разбивает число на вектор цифр в заданной системе счисления.
@@ -49,21 +51,12 @@ Natural ExtraMethods::TRANS_PDEC_STRN_N(const std::string& num, const Natural& b
 {
     if (base < Natural("2"))
         throw std::invalid_argument("Неверное основание: base должен быть больше 1");
-    for (auto& c : num)
-    {
-        Natural digit;
-        if (c >= '0' && c <= '9')
-            digit = Natural(c);
-        else
-            digit = Natural(10 + (c - 'A'));
-        if (digit >= base)
-            throw std::invalid_argument("Неверная начальная система счисления!");
-    }
+
     Natural N("0");
     for (auto& c : num) {
         Natural digit;
         if (c >= '0' && c <= '9')
-            digit = Natural(c);
+            digit = Natural(c - '0');
         else
             digit = Natural(10 + (c - 'A'));
         N = N.MUL_NN_N(base).ADD_NN_N(digit);
@@ -79,11 +72,16 @@ Natural ExtraMethods::TRANS_PDEC_STRN_N(const std::string& num, const Natural& b
      *
      * @param num Целое число для преобразования.
      * @param bitLength Требуемая длина двоичного представления (в битах).
+     * @throws std::invalid_argument Если bitLength меньше или равна длине num в 2-ичной СС.
      * @return Целое число, представляющее двоичный код исходного.
      */
 Integer ExtraMethods::TRANS_BIN_ZN_Z(const Integer& num, const Natural& bitLength) const
 {
     auto binDigits = GETDIGITS_NN_VECN(num.ABS_Z_N(), Natural("2"));
+    
+    if (bitLength <= binDigits.size())
+        throw std::invalid_argument("Неверный аргумент: bitLength должна превышать длину двоичного представления num");
+
     for (size_t i = 0; bitLength > (Natural(std::to_string(binDigits.size()))); ++i)
         binDigits.insert(binDigits.begin(), Natural("0"));
 
@@ -162,10 +160,10 @@ Integer ExtraMethods::TRANS_FACDEC_Z_Z(const Integer& num) const
 
 /**
      * @brief Проверяет, является ли число "счастливым".
-     * 
+     *
      * Последовательно заменяет число суммой квадратов его цифр,
      * пока либо не получит 1 (тогда число — счастливое), либо не зациклится.
-     * 
+     *
      * @param num Проверяемое натуральное число.
      * @return true, если число счастливое, иначе false.
      */
@@ -190,9 +188,9 @@ bool ExtraMethods::FINDOUT_LUCKYNUMBER_N_B(const Natural& num) const
 
 /**
      * @brief Возводит целое число в целую неотрицательную степень.
-     * 
+     *
      * Использует двоичное разложение показателя для оптимизации (метод быстрого возведения в степень).
-     * 
+     *
      * @param num Основание степени.
      * @param exp Показатель степени (>= 0).
      * @return Целое число, результат num^exp.
@@ -224,18 +222,6 @@ Integer ExtraMethods::EXP_ZN_Z(const Integer& num, const Natural& exp) const {
      * @return Строковое представление числа в СС baseQ (с учётом знака).
      */
 std::string ExtraMethods::TRANS_PQ_STRNN_STR(const std::pair<std::string, int> num, const Natural& baseP, const Natural& baseQ) const {
-
-    for (auto& c : num.first)
-    {
-        Natural digit;
-        if (c >= '0' && c <= '9')
-            digit = Natural(c - '0');
-        else
-            digit = Natural(10 + (c - 'A'));
-
-        if (digit > baseP || digit == baseP)
-            throw std::invalid_argument("Неверная начальная система счисления!");
-    }
     std::vector<Natural> QNumVec = GETDIGITS_NN_VECN(TRANS_PDEC_STRN_N(num.first, baseP), baseQ);
 
     std::string res = "";
