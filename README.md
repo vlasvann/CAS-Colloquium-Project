@@ -38,3 +38,10 @@
 ```bash
 chmod +x ComputerAlgebraSystem-Linux.AppImage
 ./ComputerAlgebraSystem-Linux.AppImage
+
+### Сборка проекта
+
+mkdir build
+cd build
+qmake6 ../ComputerAlgebraSystem.pro
+make
