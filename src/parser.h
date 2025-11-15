@@ -23,6 +23,7 @@ public:
     Integer parseInteger(const std::string& input);
     Rational parseRational(const std::string& input);
     Polynomial parsePolynomial(const std::string& input);
+
     std::pair<std::string, int> parseBaseNumber(std::string numStrInput, Natural* baseP) const;
 
     // Преобразование объектов в строки
