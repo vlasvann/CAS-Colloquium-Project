@@ -295,6 +295,11 @@ QString InputDialog::getOperandLabel(int index) const
         else if(index == 1) return "Исходная СС (2 ≤ CC ≤ 36)";
         else if(index == 2) return "Целевая СС (2 ≤ CC ≤ 36)";
     }
+    else if(m_methodName == "TRANS_BIN_ZN_Z"){
+        if(index == 0) return "Исходное число";
+        else if(index == 1) return "Требуемая длина в 2-ой СС";
+        else return "например: 12345";
+    }
     else if(m_methodName == "EXP_ZN_Z"){
         if(index == 0) return "Исходное число";
         else return "Степень";
@@ -328,6 +333,12 @@ QString InputDialog::getOperandPlaceholder(int index) const
         else if(index == 1) return "например: 12345";
         else return "например: 12345";
     }
+    else if(m_methodName == "TRANS_BIN_ZN_Z"){
+        if(index == 0) return "например: -123 или +456";
+        else if(index == 1) return "например: 12345";
+        else return "например: 12345";
+    }
+    
 
     // Общие шаблоны ввода по типам данных
     if (m_dataType == "Natural") return "например: 12345";
