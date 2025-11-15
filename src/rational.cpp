@@ -190,8 +190,13 @@ Rational Rational::DIV_QQ_Q(const Rational& other) const {
 * @brief Перевод рационального числа в строку
 * @return string представляющая рациональное число строка
 */
-std::string Rational::toString() const{
+std::string Rational::toString() const
+{
     std::string res {this->m_numerator.toString()};
+    if (!m_denominator.COM_NN_D(Natural("1")))
+    {
+        return res;
+    }
     return res + "/" + this->m_denominator.toString();
 }
 
