@@ -15,7 +15,7 @@ class Parser {
 public:
 	Parser() = default;
     // Вспомогательный метод
-    std::string trimAndValidate(const std::string& str, const std::string& errorMessage);
+    std::string trimAndValidate(const std::string& str, const std::string& errorMessage) const;
     int charToDigitValue(char c) const;
 
     // Парсинг строк в объекты
