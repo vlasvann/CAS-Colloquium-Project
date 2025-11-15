@@ -25,6 +25,7 @@ public:
     Polynomial parsePolynomial(const std::string& input);
 
     std::pair<std::string, int> parseBaseNumber(std::string numStrInput, Natural* baseP) const;
+	std::pair<std::string, int> TRANS_PQ_STRNN_STR(std::string numStrInput, Natural* baseP) const;
 
     // Преобразование объектов в строки
     std::string toString(const Natural& num) const;
