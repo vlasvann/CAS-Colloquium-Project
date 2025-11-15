@@ -185,17 +185,6 @@ Polynomial Parser::parsePolynomial(const std::string& input) {
     return Polynomial(terms);
 }
 
-int Parser::charToDigitValue(char c) const
-{
-    if (c >= '0' && c <= '9')
-        return c - '0';
-    if (c >= 'A' && c <= 'Z')
-        return 10 + (c - 'A');
-    if (c >= 'a' && c <= 'z')
-        return 10 + (c - 'a');
-    return -1;
-}
-
 std::pair<std::string, int> Parser::TRANS_PQ_STRNN_STR(
     std::string numStrInput,
     Natural* baseP) const
