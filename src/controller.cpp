@@ -89,7 +89,7 @@ void Controller::initializeOperations() {
 
     //Дополнительные математические операции
     m_typeMethods["Extra Methods"] = {"TRANS_BIN_ZN_Z", "TRANS_DECFAC_Z_Z", "TRANS_FACDEC_Z_Z", "FINDOUT_LUCKYNUMBER_N_B", "EXP_ZN_Z", "TRANS_PQ_STRNN_STR"};
-    m_methodOperands["TRANS_BIN_ZN_Z"] = 1;
+    m_methodOperands["TRANS_BIN_ZN_Z"] = 2;
     m_methodOperands["TRANS_DECFAC_Z_Z"] = 1;
     m_methodOperands["TRANS_FACDEC_Z_Z"] = 1;
     m_methodOperands["FINDOUT_LUCKYNUMBER_N_B"] = 1;
