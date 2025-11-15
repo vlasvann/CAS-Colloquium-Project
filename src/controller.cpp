@@ -441,7 +441,7 @@ std::string Controller::executeExtraOperation(const std::string& method, const s
         if(inputs.size() < 1) throw std::invalid_argument("Вы ввели слишком мало операндов!");
         Natural a = m_parser.parseNatural(inputs[0]);
         bool result = m_extra.FINDOUT_LUCKYNUMBER_N_B(a);
-        return m_parser.toString(result);
+        return result ? "Счастливое" : "Несчастливое";
     }
     else if(method == "EXP_ZN_Z"){
         if(inputs.size() < 2) throw std::invalid_argument("Вы ввели слишком мало операндов!");
