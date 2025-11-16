@@ -31,7 +31,7 @@
 
 ### Готовые сборки
 
-Готовые исполняемые файлы доступны для Linux, Windows и macOS на странице [Releases](https://github.com/{{ github.repository_owner }}/CAS-Colloquium-Project/releases/).
+Готовые исполняемые файлы доступны для Linux, Windows и macOS на странице [Releases](https://github.com/vlasvann/CAS-Colloquium-Project/releases).
 
 ### Linux
 Сборки для Linux распространяются в формате AppImage:
