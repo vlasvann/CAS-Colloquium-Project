@@ -298,10 +298,14 @@ QString InputDialog::getOperandLabel(int index) const
     else if(m_methodName == "TRANS_BIN_ZN_Z"){
         if(index == 0) return "Исходное число";
         else if(index == 1) return "Требуемая длина в 2-ой СС";
-        else return "например: 12345";
-    }
+    }  
     else if(m_methodName == "EXP_ZN_Z"){
         if(index == 0) return "Исходное число";
+        else return "Степень";
+    }
+    else if(m_methodName == "MUL_Pxk_P"){
+        if(index == 0) return "Многочлен";
+        else if(index == 1) return "Степень";
         else return "Степень";
     }
 

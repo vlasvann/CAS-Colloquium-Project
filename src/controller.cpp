@@ -75,6 +75,8 @@ void Controller::initializeOperations() {
     m_methodOperands["GCF_PP_P"] = 2;
     m_methodOperands["DER_P_P"] = 1;
     m_methodOperands["NMR_P_P"] = 1;
+    m_methodOperands["MUL_Pxk_P"] = 2;
+    m_methodOperands["FAC_P_Q"] = 1;
     m_methodDisplayNames["ADD_PP_P"] = "Сложение многочленов";
     m_methodDisplayNames["SUB_PP_P"] = "Вычитание многочленов";
     m_methodDisplayNames["MUL_PQ_P"] = "Умножение многочлена на рациональное число";
@@ -86,6 +88,9 @@ void Controller::initializeOperations() {
     m_methodDisplayNames["GCF_PP_P"] = "НОД многочленов";
     m_methodDisplayNames["DER_P_P"] = "Производная многочлена";
     m_methodDisplayNames["NMR_P_P"] = "Преобразование многочлена — кратные корни в простые";
+    m_methodDisplayNames["MUL_Pxk_P"] = "Умножения полинома на x^k";
+    m_methodDisplayNames["FAC_P_Q"] = "Вычисления НОК знаменателей и НОД числителей многочлена";
+
 
     //Дополнительные математические операции
     m_typeMethods["Extra Methods"] = {"TRANS_BIN_ZN_Z", "TRANS_DECFAC_Z_Z", "TRANS_FACDEC_Z_Z", "FINDOUT_LUCKYNUMBER_N_B", "EXP_ZN_Z", "TRANS_PQ_STRNN_STR"};
@@ -408,6 +413,21 @@ std::string Controller::executePolynomialOperation(const std::string& method, co
         Polynomial result = a.NMR_P_P();
         return m_parser.toString(result);
     }
+    else if(method == "MUL_Pxk_P"){
+		if(inputs.size() < 2) throw std::invalid_argument("Вы ввели слишком мало операндов!");
+        Polynomial a = m_parser.parsePolynomial(inputs[0]);
+        Natural b = m_parser.parseNatural(inputs[1]);
+        Polynomial result = a.NMR_P_P(b);
+        return m_parser.toString(result);
+	}
+	else if(method == "FAC_P_Q"){
+		if(inputs.size() < 1) throw std::invalid_argument("Вы ввели слишком мало операндов!");
+        Polynomial a = m_parser.parsePolynomial(inputs[0]);
+        Polynomial result = a.FAC_P_Q(b);
+        return m_parser.toString(result);
+	}
+
+	
     else throw std::invalid_argument("Неизвестный метод!");
 }
 
