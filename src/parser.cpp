@@ -138,7 +138,7 @@ Polynomial Parser::parsePolynomial(const std::string& input) {
     if (s[0] != '+' && s[0] != '-')
         s = "+" + s;
 
-    std::unordered_map<int, Rational> terms;
+    std::map<Natural, Rational> terms;
 
     std::regex termRegex(R"(([+-])(\d*(?:/\d+)?)?(x(?:\^(\d+))?)?)");
     std::smatch match;
@@ -169,11 +169,12 @@ Polynomial Parser::parsePolynomial(const std::string& input) {
         if (!xPart.empty()) {
             exp = expStr.empty() ? 1 : std::stoi(expStr);
         }
+        Natural expNat(std::to_string(exp));
 
-        if (terms.find(exp) != terms.end()) {
-            terms[exp] = terms[exp] + coeff;
+        if (terms.find(expNat) != terms.end()) {
+            terms[expNat] = terms[expNat] + coeff;
         } else {
-            terms[exp] = coeff;
+            terms.emplace(expNat, coeff);
         }
 
         it = match.suffix().first;
