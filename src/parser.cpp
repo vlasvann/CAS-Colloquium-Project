@@ -144,11 +144,28 @@ Polynomial Parser::parsePolynomial(const std::string& input) {
     std::smatch match;
     auto it = s.cbegin();
 
+    auto parseNat = [&](const std::string& str) -> int {
+        if (str.empty())
+            return 1; 
+        int v = 0;
+        for (char c : str) {
+            if (!isdigit(c))
+                throw std::invalid_argument("Некорректная степень: " + str);
+            v = v * 10 + (c - '0');
+        }
+        return v;
+    };
+
     while (std::regex_search(it, s.cend(), match, termRegex)) {
         std::string signStr = match[1];  // "+" или "-"
         std::string coeffStr = match[2]; // числитель/дробь
         std::string xPart    = match[3]; // x или x^k
         std::string expStr   = match[4]; // k
+
+        if (coeffStr.empty() && xPart.empty() && match[0].length() <= 1) {
+            it = match.suffix().first;
+            continue;
+        }
 
         bool negative = (signStr == "-");
 
@@ -167,7 +184,7 @@ Polynomial Parser::parsePolynomial(const std::string& input) {
 
         int exp = 0;
         if (!xPart.empty()) {
-            exp = expStr.empty() ? 1 : std::stoi(expStr);
+            exp = parseNat(expStr);
         }
         Natural expNat(std::to_string(exp));
 
