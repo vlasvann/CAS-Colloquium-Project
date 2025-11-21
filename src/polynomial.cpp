@@ -13,7 +13,7 @@
   *
   * Создает нулевой полином (степень и коэффициент - 0)
   */
-Polynomial::Polynomial() : m_degree(0)
+Polynomial::Polynomial() : m_degree(Natural(0))
 {
     m_value.insert({ m_degree, Rational() });
 }
@@ -25,8 +25,8 @@ Polynomial::Polynomial() : m_degree(0)
  *
  * Создает полином с заданными степенями и рациональными коэффициентами
  */
-Polynomial::Polynomial(const std::unordered_map<int, Rational>& value)
-    : m_degree(0)
+Polynomial::Polynomial(const std::map<Natural, Rational>& value)
+    : m_degree(Natural(0))
 {
     for (auto curr = value.begin(); curr != value.end(); ++curr)
     {
@@ -41,7 +41,7 @@ Polynomial::Polynomial(const std::unordered_map<int, Rational>& value)
 
     }
 
-    if (m_degree == 0 && m_value.empty())
+    if (!m_degree.NZER_N_B() && m_value.empty())
         m_value.insert({ m_degree, Rational() });
 }
 
@@ -52,8 +52,8 @@ Polynomial::Polynomial(const std::unordered_map<int, Rational>& value)
  *
  * Создает полином с заданными степенями и рациональными (целые -> рациональные) коэффициентами
  */
-Polynomial::Polynomial(const std::unordered_map<int, Integer>& value)
-    : m_degree(0)
+Polynomial::Polynomial(const std::map<Natural, Integer>& value)
+    : m_degree(Natural(0))
 {
     for (auto curr = value.begin(); curr != value.end(); ++curr)
     {
@@ -67,7 +67,7 @@ Polynomial::Polynomial(const std::unordered_map<int, Integer>& value)
 
     }
 
-    if (m_degree == 0 && m_value.empty())
+    if (!m_degree.NZER_N_B() && m_value.empty())
         m_value.insert({ m_degree, Rational() });
 }
 
@@ -79,7 +79,7 @@ Polynomial::Polynomial(const std::unordered_map<int, Integer>& value)
  * Складывает два полинома (ax^i + bx^i = (a+b)x^i) i = 0...max(deg)
 */
 Polynomial Polynomial::ADD_PP_P(const Polynomial& other) const {
-    std::unordered_map<int, Rational> res = m_value;
+    std::map<Natural, Rational> res = m_value;
 
     for (const auto& [degree, coeff] : other.m_value) {
         if (coeff.isZero())
@@ -106,7 +106,7 @@ Polynomial Polynomial::ADD_PP_P(const Polynomial& other) const {
  * Вычитает два полинома (ax^i - bx^i = (a-b)x^i) i = 0...max(deg)
 */
 Polynomial Polynomial::SUB_PP_P(const Polynomial& other) const {
-    std::unordered_map<int, Rational> res = m_value;
+    std::map<Natural, Rational> res = m_value;
 
     for (const auto& [degree, coeff] : other.m_value) {
 
@@ -135,7 +135,7 @@ Polynomial Polynomial::MUL_PQ_P(const Rational& otherCoeff) const {
     if (isZero() || otherCoeff.isZero())
         return Polynomial();
 
-    std::unordered_map<int, Rational> res;
+    std::map<Natural, Rational> res;
 
     for (const auto& [degree, coeff] : m_value)
         res.insert({ degree, coeff.MUL_QQ_Q(otherCoeff) });
@@ -154,12 +154,10 @@ Polynomial Polynomial::MUL_Pxk_P(const Natural& otherDeg) const {
     if (isZero())
         return Polynomial();
 
-    std::unordered_map<int, Rational> res;
-
-    int otherDegree = std::stoi(otherDeg.toString());
+    std::map<Natural, Rational> res;
 
     for (const auto& [degree, coeff] : m_value)
-        res.insert({ degree + otherDegree, coeff });
+        res.insert({ degree + otherDeg, coeff });
 
     return Polynomial(res);
 }
@@ -273,7 +271,7 @@ Polynomial Polynomial::DIV_PP_P(const Polynomial& divisor) const {
     {
         Natural tempDegree = remainder.DEG_P_N() - divisor.DEG_P_N();
         Rational tempCoeff = remainder.LED_P_Q() / divisor.LED_P_Q();
-        Polynomial temp = Polynomial(std::unordered_map<int, Rational>{{std::stoi(tempDegree.toString()), tempCoeff}});
+        Polynomial temp = Polynomial(std::map<Natural, Rational>{{std::stoi(tempDegree.toString()), tempCoeff}});
         remainder = remainder - divisor.MUL_Pxk_P(tempDegree).MUL_PQ_P(tempCoeff);
         quotient = quotient + temp;
     }
@@ -332,7 +330,7 @@ Polynomial Polynomial::GCF_PP_P(const Polynomial& other) const {
 
     if (!(leadingCoeff.isZero() || leadingCoeff == Rational(Integer(1), Natural(1))))
     {
-        std::unordered_map<int, Rational> normalized;
+        std::map<Natural, Rational> normalized;
         for (const auto& [deg, coeff] : thisPolynomialCopy.getValue())
             normalized.insert({ deg, coeff / leadingCoeff });
 
@@ -355,7 +353,7 @@ Polynomial Polynomial::DER_P_P() const {
     if (isZero())
         return Polynomial();
 
-    std::unordered_map<int, Rational> derivativeValue;
+    std::map<Natural, Rational> derivativeValue;
 
     for (const auto& [deg, coeff] : m_value)
     {
@@ -400,28 +398,38 @@ std::string Polynomial::toString() const {
         return "0";
 
     std::string result;
-    std::vector<int> degrees;
+    std::vector<Natural> degrees;
     degrees.reserve(m_value.size());
 
     for (auto it = m_value.begin(); it != m_value.end(); ++it)
     {
-        int deg = it->first;
+        Natural deg = it->first;
         degrees.push_back(deg);
     }
 
-    std::sort(degrees.begin(), degrees.end(), std::greater<int>());
+    std::sort(degrees.begin(), degrees.end(), [](auto& a, auto& b) { return a > b; });
 
     for (size_t i = 0; i < degrees.size(); ++i)
     {
-        int deg = degrees[i];
+        Natural deg = degrees[i];
         const Rational& coef = m_value.find(deg)->second;
+        std::string degStr = deg.toString();
         std::string coefStr = coef.toString();
 
         if (coefStr[0] != '-' && i > 0)
             result += "+";
 
-        result += deg == 0 ? coefStr : coefStr != "1" ? coefStr + "x^" + std::to_string(deg) : "x^" + std::to_string(deg);
+        if (deg == 0)
+            result += coefStr;
 
+        else if (coefStr != "1" && deg != Natural(1))
+            result += coefStr + "x^" + degStr;
+
+        else if (coefStr != "1")
+            result += coefStr + "x";
+
+        else
+            result += "x";
     }
 
     return result;
