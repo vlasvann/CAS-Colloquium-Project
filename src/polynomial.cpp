@@ -415,21 +415,16 @@ std::string Polynomial::toString() const {
         const Rational& coef = m_value.find(deg)->second;
         std::string degStr = deg.toString();
         std::string coefStr = coef.toString();
-
         if (coefStr[0] != '-' && i > 0)
             result += "+";
 
-        if (deg == 0)
+        if (!deg.NZER_N_B())
             result += coefStr;
-
-        else if (coefStr != "1" && deg != Natural(1))
-            result += coefStr + "x^" + degStr;
-
-        else if (coefStr != "1")
-            result += coefStr + "x";
-
         else
-            result += "x";
+        {
+            coefStr = coefStr == "1" ? "" : coefStr == "-1" ? "-" : coefStr;
+            result += deg != Natural(1) ? coefStr + "x^" + degStr : coefStr + "x";
+        }
     }
 
     return result;

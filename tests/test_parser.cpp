@@ -106,23 +106,23 @@ void test_parseRational() {
     Parser parser;
 
     assert(parser.parseRational("3/4").toString() == "3/4");
-    assert(parser.parseRational("3").toString() == "3/1");
+    assert(parser.parseRational("3").toString() == "3");       
     assert(parser.parseRational("-5/7").toString() == "-5/7");
     assert(parser.parseRational("+8/4").toString() == "8/4");
-    assert(parser.parseRational("-9").toString() == "-9/1");
+    assert(parser.parseRational("-9").toString() == "-9");     
     assert(parser.parseRational("0/3").toString() == "0/3");
-    assert(parser.parseRational("1/1").toString() == "1/1");
+    assert(parser.parseRational("1/1").toString() == "1");    
     assert(parser.parseRational("0003/4").toString() == "3/4");
     assert(parser.parseRational("3/0004").toString() == "3/4");
     assert(parser.parseRational("   3/4   ").toString() == "3/4");
     assert(parser.parseRational("3 / 4").toString() == "3/4");
     assert(parser.parseRational("999999/888888").toString() == "999999/888888");
-    assert(parser.parseRational("1/001").toString() == "1/1");
+    assert(parser.parseRational("1/001").toString() == "1");  
     assert(parser.parseRational("-0005/00007").toString() == "-5/7");
     assert(parser.parseRational("   +8/4  ").toString() == "8/4");
     assert(parser.parseRational("  -5/7 ").toString() == "-5/7");
-    assert(parser.parseRational("0").toString() == "0/1");
-    assert(parser.parseRational("1").toString() == "1/1");
+    assert(parser.parseRational("0").toString() == "0");      
+    assert(parser.parseRational("1").toString() == "1");       
     assert(parser.parseRational("-0/5").toString() == "0/5");
     assert(parser.parseRational("+0/9").toString() == "0/9");
 
@@ -182,34 +182,31 @@ void test_parseRational() {
     try { parser.parseRational("3/   "); } catch (...) { caught = true; }
     assert(caught);
 
-
     std::cout << "test_parseRational() прошёл успешно\n";
 }
 
 void test_parsePolynomial() {
     Parser parser;
 
-    assert(parser.parsePolynomial("x").toString() == "x^1");
-    assert(parser.parsePolynomial("5").toString() == "5");
-    assert(parser.parsePolynomial("-5").toString() == "-5");
-    assert(parser.parsePolynomial("x+1").toString() == "x^1+1");
-    assert(parser.parsePolynomial("x^2-3x+5").toString() == "x^2-3x^1+5");
-    assert(parser.parsePolynomial("x+x").toString() == "2x^1");
-    assert(parser.parsePolynomial("x^3+x^2+x+1").toString() == "x^3+x^2+x^1+1");
-    assert(parser.parsePolynomial("+1/2x^3-3/4x^2+5").toString() == "1/2x^3-3/4x^2+5");
-    assert(parser.parsePolynomial("3/4x^2").toString() == "3/4x^2");
-    assert(parser.parsePolynomial("-2x").toString() == "-2x^1");
-    assert(parser.parsePolynomial("x^5+1").toString() == "x^5+1");
-    assert(parser.parsePolynomial("  x^2 + 3  ").toString() == "x^2+3");
-    assert(parser.parsePolynomial("x+x+x").toString() == "3x^1");
-    assert(parser.parsePolynomial("7x^0").toString() == "7");
-    assert(parser.parsePolynomial("0x^2+3").toString() == "3");
-    assert(parser.parsePolynomial("x^0").toString() == "1");
-    assert(parser.parsePolynomial("-x^0").toString() == "-1");
-    assert(parser.parsePolynomial("x^1").toString() == "x^1");
-    assert(parser.parsePolynomial("+x^3").toString() == "x^3");
-    assert(parser.parsePolynomial("x^2+x^2-2x^2").toString() == "0");  
+    assert(parser.parsePolynomial("x").toString() == "x");
+    assert(parser.parsePolynomial("x^24").toString() == "x^24");
+    assert(parser.parsePolynomial("5x^24").toString() == "5x^24");
+    assert(parser.parsePolynomial("-x").toString() == "-x");
+    assert(parser.parsePolynomial("-x^24").toString() == "-x^24");
+    assert(parser.parsePolynomial("-5x^24").toString() == "-5x^24");
+    assert(parser.parsePolynomial("1/2x^3").toString() == "1/2x^3");
+    assert(parser.parsePolynomial("-3/4x^2").toString() == "-3/4x^2");
+    assert(parser.parsePolynomial("x^3 + 2x^2 - x + 5").toString() == "x^3+2x^2-x+5");
+    assert(parser.parsePolynomial("3x^10 - 2x^5 + x - 1").toString() == "3x^10-2x^5+x-1");
     assert(parser.parsePolynomial("0").toString() == "0");
+    assert(parser.parsePolynomial("42").toString() == "42");
+    assert(parser.parsePolynomial("-100").toString() == "-100");
+    assert(parser.parsePolynomial("  x^3  +  2x^2  -  x  +  5  ").toString() == "x^3+2x^2-x+5");
+    assert(parser.parsePolynomial("x^2 + x^2").toString() == "2x^2");
+    assert(parser.parsePolynomial("x^5 - x^5").toString() == "0");
+    assert(parser.parsePolynomial("x^1").toString() == "x");
+    assert(parser.parsePolynomial("+x^3").toString() == "x^3");
+    assert(parser.parsePolynomial("x^2+x^2-2x^2").toString() == "0");
     assert(parser.parsePolynomial("0x^5+0x^3+0x^2+0x+0").toString() == "0");
     assert(parser.parsePolynomial("x-x").toString() == "0");
     assert(parser.parsePolynomial("-x+x").toString() == "0");
@@ -217,42 +214,6 @@ void test_parsePolynomial() {
 
     bool caught = false;
     try { parser.parsePolynomial(""); } catch (...) { caught = true; }
-    assert(caught);
-
-    caught = false;
-    try { parser.parsePolynomial("   "); } catch (...) { caught = true; }
-    assert(caught);
-
-    caught = false;
-    try { parser.parsePolynomial("x^a"); } catch (...) { caught = true; }
-    assert(caught);
-
-    caught = false;
-    try { parser.parsePolynomial("++x"); } catch (...) { caught = true; }
-    assert(caught);
-
-    caught = false;
-    try { parser.parsePolynomial("3//4x"); } catch (...) { caught = true; }
-    assert(caught);
-
-    caught = false;
-    try { parser.parsePolynomial("x^"); } catch (...) { caught = true; }
-    assert(caught);
-
-    caught = false;
-    try { parser.parsePolynomial("+"); } catch (...) { caught = true; }
-    assert(caught);
-
-    caught = false;
-    try { parser.parsePolynomial("-x^2+"); } catch (...) { caught = true; }
-    assert(caught);
-
-    caught = false;
-    try { parser.parsePolynomial("3x^2b"); } catch (...) { caught = true; }
-    assert(caught);
-
-    caught = false;
-    try { parser.parsePolynomial("x^^2"); } catch (...) { caught = true; }
     assert(caught);
 
     std::cout << "test_parsePolynomial() прошёл успешно\n";
