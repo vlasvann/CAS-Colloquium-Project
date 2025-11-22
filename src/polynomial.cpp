@@ -184,7 +184,7 @@ Rational Polynomial::LED_P_Q() const {
  * Если полином нулевой, то возвращает 0, иначе возврат старшей степени
 */
 Natural Polynomial::DEG_P_N() const {
-    return Natural(m_degree);
+    return m_degree;
 }
 
 /**
@@ -255,7 +255,7 @@ Polynomial Polynomial::MUL_PP_P(const Polynomial& other) const {
  * Возвращаем частное
  */
 Polynomial Polynomial::DIV_PP_P(const Polynomial& divisor) const {
-    if (divisor.DEG_P_N() == 0) {
+    if (!divisor.DEG_P_N().NZER_N_B()) {
         Rational c = divisor.LED_P_Q();
 
         if (c.isZero())
@@ -271,7 +271,7 @@ Polynomial Polynomial::DIV_PP_P(const Polynomial& divisor) const {
     {
         Natural tempDegree = remainder.DEG_P_N() - divisor.DEG_P_N();
         Rational tempCoeff = remainder.LED_P_Q() / divisor.LED_P_Q();
-        Polynomial temp = Polynomial(std::map<Natural, Rational>{{std::stoi(tempDegree.toString()), tempCoeff}});
+        Polynomial temp = Polynomial(std::map<Natural, Rational>{{tempDegree, tempCoeff}});
         remainder = remainder - divisor.MUL_Pxk_P(tempDegree).MUL_PQ_P(tempCoeff);
         quotient = quotient + temp;
     }
@@ -357,10 +357,10 @@ Polynomial Polynomial::DER_P_P() const {
 
     for (const auto& [deg, coeff] : m_value)
     {
-        if (deg == 0)
+        if (!deg.NZER_N_B())
             continue;
 
-        derivativeValue.insert({ deg - 1, Rational(Integer(Natural(deg)), Natural(1)) * coeff });
+        derivativeValue.insert({ deg - Natural(1), Rational(Integer(Natural(deg)), Natural(1)) * coeff });
     }
 
     return Polynomial(derivativeValue);
@@ -436,7 +436,7 @@ std::string Polynomial::toString() const {
  */
 bool Polynomial::isZero() const {
     auto it = m_value.find(m_degree);
-    return m_degree == 0 && it != m_value.end() && it->second.isZero();
+    return !m_degree.NZER_N_B() && it != m_value.end() && it->second.isZero();
 }
 
 Polynomial Polynomial::operator+(const Polynomial& other) const {
